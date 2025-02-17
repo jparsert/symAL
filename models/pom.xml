@@ -30,9 +30,10 @@
 		    <version>2.3.4</version>
         </dependency>
 		<dependency>
-            <groupId>jdd</groupId>
+        <!-- https://mvnrepository.com/artifact/org.bitbucket.vahidi/jdd -->
+            <groupId>org.bitbucket.vahidi</groupId>
             <artifactId>jdd</artifactId>
-            <version>1.0</version>
+            <version>108</version>
 		</dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
@@ -44,6 +45,22 @@
             <artifactId>junit</artifactId>
             <version>4.13.1</version>
         </dependency>
+
+        <!-- https://mvnrepository.com/artifact/org.sosy-lab/java-smt -->
+        <dependency>
+            <groupId>org.sosy-lab</groupId>
+            <artifactId>java-smt</artifactId>
+            <version>5.0.1</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/tools.aqua/z3-turnkey -->
+        <dependency>
+            <groupId>tools.aqua</groupId>
+            <artifactId>z3-turnkey</artifactId>
+            <version>4.13.4</version>
+        </dependency>
+
+
     </dependencies>
 
     <build>
