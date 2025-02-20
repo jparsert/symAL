@@ -10,6 +10,7 @@ import theory.LRATuples.RationalTupleCompAlgebra;
 import theory.predicates.SymbolicDecisionTree;
 
 
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -20,8 +21,9 @@ public class Main {
 
         SFA<BooleanFormula, LRATuple> a = SFA.getEmptySFA(new RationalTupleCompAlgebra(5));
 
-        List<List<LRATuple>> l = null;
-        SymbolicDecisionTree<LRATuplePred, LRATuple> decTree = SymbolicDecisionTree.buildTree(l);
+        List<List<LRATuple>> l = new ArrayList<>();
+        l.add(new ArrayList<>());
+        SymbolicDecisionTree decTree = SymbolicDecisionTree.buildTree(l);
 
     }
 }
