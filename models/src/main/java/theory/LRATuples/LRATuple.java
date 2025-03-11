@@ -28,6 +28,14 @@ public class LRATuple  {
         this.tuple = tuple;
     }
 
+    public LRATuple(Rational[] tuple) {
+        this.tuple = ImmutableList.copyOf(tuple);
+    }
+
+    public LRATuple(Long[] tuple) {
+        this.tuple = ImmutableList.copyOf(Arrays.stream(tuple).map(Rational::of).toList());
+    }
+
     public LRATuple(List<Rational> lst) {
         this.tuple = ImmutableList.copyOf(lst);
     }

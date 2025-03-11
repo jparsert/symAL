@@ -3,11 +3,7 @@ import org.sat4j.specs.TimeoutException;
 import org.sosy_lab.common.configuration.InvalidConfigurationException;
 import org.sosy_lab.java_smt.api.BooleanFormula;
 import theory.LRATuples.LRATuple;
-import theory.LRATuples.LRATuplePred;
-import theory.intervals.RealPred;
-import theory.intervals.RealSolver;
 import theory.LRATuples.RationalTupleCompAlgebra;
-import theory.predicates.SymbolicDecisionTree;
 
 
 import java.util.ArrayList;
@@ -23,7 +19,7 @@ public class Main {
 
         List<List<LRATuple>> l = new ArrayList<>();
         l.add(new ArrayList<>());
-        SymbolicDecisionTree decTree = SymbolicDecisionTree.buildTree(l);
+        //SymbolicDecisionTree decTree = SymbolicDecisionTree.buildTree(l);
 
     }
 }

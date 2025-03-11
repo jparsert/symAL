@@ -1,31 +1,34 @@
 package theory.predicates;
 
-
-import scala.Tuple1;
-import scala.util.parsing.combinator.PackratParsers;
-import theory.BooleanAlgebra;
+import org.sosy_lab.common.ShutdownNotifier;
+import org.sosy_lab.common.configuration.Configuration;
+import org.sosy_lab.common.configuration.InvalidConfigurationException;
+import org.sosy_lab.common.log.BasicLogManager;
+import org.sosy_lab.common.log.LogManager;
+import org.sosy_lab.common.rationals.Rational;
+import org.sosy_lab.java_smt.SolverContextFactory;
+import org.sosy_lab.java_smt.api.*;
 import theory.LRATuples.LRATuple;
 import theory.LRATuples.LRATuplePred;
 import theory.LRATuples.VarRat;
 import theory.LRATuples.VarVar;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.stream.IntStream;
+import java.util.*;
+import java.util.stream.Stream;
 
 public class SymbolicDecisionTree {
 
+    sealed private abstract static class TreeADT permits SymbolicDecisionTree.Leaf, SymbolicDecisionTree.Node {}
 
-    int dimension;
+    final class Leaf extends SymbolicDecisionTree.TreeADT {
+        Integer classLabel = null;
 
-    sealed private abstract class TreeADT permits Leaf, Tree {}
-
-    final class Leaf extends TreeADT {
-        Integer class_index = null;
+        Leaf(Integer label) {
+            this.classLabel = label;
+        }
     }
 
-    final class Tree extends TreeADT {
+    final class Node extends SymbolicDecisionTree.TreeADT {
         LRATuplePred pred;
 
         //List<Domain> data
@@ -36,135 +39,308 @@ public class SymbolicDecisionTree {
 
         TreeADT left;
         TreeADT right;
-    }
 
-    private record DataSplit (LRATuplePred predicate, List<List<LRATuple>> leftData, List<List<LRATuple>> rightData) {}
-
-
-    TreeADT root = null;
-
-    private SymbolicDecisionTree(int dim) {
-        this.dimension = dim;
-    }
-
-    private long countNonEmptyClasses(List<List<LRATuple>> data) {
-        return data.stream().filter((List<LRATuple> l) -> !l.isEmpty()).count();
-    }
-
-    private DataSplit splitData(List<List<LRATuple>> data, VarVar pred) {
-        List<List<LRATuple>> left = new ArrayList<>();
-        List<List<LRATuple>> right = new ArrayList<>();
-
-        for (List<LRATuple> dt : data) {
-            List<LRATuple> l = new ArrayList<>();
-            List<LRATuple> r = new ArrayList<>();
-
-            for (LRATuple d : dt) {
-                if (d.tuple.get(pred.index_left()).compareTo(d.tuple.get(pred.index_right())) < 0) { //todo that < is what we want
-                    l.add(d);
-                } else {
-                    r.add(d);
-                }
-            }
-
-            left.add(l);
-            right.add(r);
+        Node(int featureIndex, Rational threshold) {
+            pred = new VarRat(featureIndex, threshold);
         }
 
-        return new DataSplit(pred, left, right);
-    }
-
-    private DataSplit splitData(List<List<LRATuple>> data, VarRat pred) {
-        List<List<LRATuple>> left = new ArrayList<>();
-        List<List<LRATuple>> right = new ArrayList<>();
-
-        for (List<LRATuple> dt : data) {
-            List<LRATuple> l = new ArrayList<>();
-            List<LRATuple> r = new ArrayList<>();
-
-            for (LRATuple d : dt) {
-                if (d.tuple.get(pred.index_left()).compareTo(pred.rat()) < 0) { //todo verify that < is what we want and not >
-                    l.add(d);
-                } else {
-                    r.add(d);
-                }
-            }
-
-            left.add(l);
-            right.add(r);
+        Node(LRATuplePred pred) {
+            this.pred = pred;
         }
 
-        return new DataSplit(pred, left, right);
+        Node (int featIdx1, int featIdx2) {
+            pred = new VarVar(featIdx1, featIdx2);
+        }
     }
 
-    private DataSplit splitData(List<List<LRATuple>> data, LRATuplePred pred) {
-        return switch (pred) {
-            case VarRat vr -> splitData(data, vr);
-            case VarVar vv -> splitData(data, vv);
-        };
+
+    private TreeADT root;
+
+    private SymbolicDecisionTree() {
+
     }
 
-    private DataSplit findBestSplit(List<List<LRATuple>> data) {
-        // check index splits of 'x < y'
-        DataSplit resultSplit = null;
-        for (int i = 0; i < dimension; i++) {
-            for (int j = 0; j < dimension; j++) {
+    public static SymbolicDecisionTree buildByIterativeDeepening(List<LRATuple> features, List<Integer> labels) {
+        SymbolicDecisionTree tree = new SymbolicDecisionTree();
+        for (int depthLimit = 1; ; depthLimit++) {
+            TreeADT root = tree.buildTree(features, labels, depthLimit);
+            if (root != null) {
+                tree.root = root;
+                return tree;
+            }
+        }
+    }
+
+
+
+
+    private TreeADT buildTree(List<LRATuple> data, List<Integer> labels, int depthLimit) {
+        // check if they are all of the same class
+        if (labels.isEmpty() || labels.stream().allMatch(labels.getFirst()::equals)) {
+            return new Leaf(labels.getFirst()); // Leaf node
+        }
+
+        if (depthLimit == 0) {
+            return null; // Depth limit reached without perfect classification
+        }
+
+        LRATuplePred bestPred = new VarRat(-1, Rational.of(0));
+
+        double bestGain = -1;
+        List<LRATuple> bestLeftFeatures = new ArrayList<>();
+        List<Integer> bestLeftLabels = new ArrayList<>();
+        List<LRATuple> bestRightFeatures = new ArrayList<>();
+        List<Integer> bestRightLabels = new ArrayList<>();
+
+        // consider constraints of type x_i <= x_j
+        for (int i = 0; i < data.getFirst().tuple.size(); i++) {
+            for (int j = 0; j < data.getFirst().tuple.size(); j++) {
                 if (i == j) {
                     continue;
                 }
-                LRATuplePred p = new VarVar(i, j);
-                DataSplit split = splitData(data, p);
-                double gini = calculateInformationGain(split);
-                if (gini > 0.0) { // todo
-                    resultSplit = split;
+                List<LRATuple> leftFeatures = new ArrayList<>();
+                List<Integer> leftLabels = new ArrayList<>();
+                List<LRATuple> rightFeatures = new ArrayList<>();
+                List<Integer> rightLabels = new ArrayList<>();
+
+                for (int k = 0; k < data.size(); k++) {
+                    if (leq(data.get(k).tuple.get(i), data.get(k).tuple.get(j))) {
+                        leftFeatures.add(data.get(k));
+                        leftLabels.add(labels.get(k));
+                    } else {
+                        rightFeatures.add(data.get(k));
+                        rightLabels.add(labels.get(k));
+                    }
+                }
+
+                if (!leftLabels.isEmpty() && !rightLabels.isEmpty()) {
+                    double gain = informationGain(labels, leftLabels, rightLabels);
+                    if (gain > bestGain) {
+                        bestGain = gain;
+                        bestPred = new VarVar(i , j);
+                        bestLeftFeatures = leftFeatures;
+                        bestLeftLabels = leftLabels;
+                        bestRightFeatures = rightFeatures;
+                        bestRightLabels = rightLabels;
+                    }
                 }
             }
         }
 
-        return resultSplit;
-    }
+        // consider constraints of type x_i <= c
+        for (int i = 0; i < data.getFirst().tuple.size(); i++) {
+            Rational threshold = findBestThreshold(data, labels, i);
+            List<LRATuple> leftFeatures = new ArrayList<>();
+            List<Integer> leftLabels = new ArrayList<>();
+            List<LRATuple> rightFeatures = new ArrayList<>();
+            List<Integer> rightLabels = new ArrayList<>();
 
-    private double calculateInformationGain(DataSplit split) {
-        return 0.0;
-    }
+            for (int j = 0; j < data.size(); j++) {
+                if (leq(data.get(j).tuple.get(i), threshold)) {
+                    leftFeatures.add(data.get(j));
+                    leftLabels.add(labels.get(j));
+                } else {
+                    rightFeatures.add(data.get(j));
+                    rightLabels.add(labels.get(j));
+                }
+            }
 
-    private TreeADT createTree(List<List<LRATuple>> data) {
-        // No stopping condition as we need perfect classification for now
 
-        //We check if there are more than 2 element classes in the data
-        if (countNonEmptyClasses(data) <= 1) {
-            int idx = IntStream.range(0, data.size()).filter(i -> !data.get(i).isEmpty()).findFirst().getAsInt();
-            Leaf res = new Leaf();
-            res.class_index = idx;
-            return res;
+            if (!leftLabels.isEmpty() && !rightLabels.isEmpty()) {
+                double gain = informationGain(labels, leftLabels, rightLabels);
+                if (gain > bestGain) {
+                    bestGain = gain;
+                    bestPred = new VarRat(i, threshold);
+                    bestLeftFeatures = leftFeatures;
+                    bestLeftLabels = leftLabels;
+                    bestRightFeatures = rightFeatures;
+                    bestRightLabels = rightLabels;
+                }
+            }
         }
 
-        DataSplit split =  findBestSplit(data);
+        if (bestGain == -1) {
+            return null; // No valid split found
+        }
 
-        Tree res = new Tree();
-        res.left = createTree(split.leftData);
-        res.right = createTree(split.rightData);
-        res.pred = split.predicate;
+        Node node = new Node(bestPred);
+        node.left = buildTree(bestLeftFeatures, bestLeftLabels, depthLimit - 1);
+        node.right = buildTree(bestRightFeatures, bestRightLabels, depthLimit - 1);
 
-        return res;
+        // Could not perfectly classify
+        if (node.left == null || node.right == null) return null;
+
+        return node;
     }
 
 
-
-    private void train(List<List<LRATuple>> values) {
-        //todo
+    // return true if a <= b
+    public static boolean leq(Rational a, Rational b) {
+        return a.compareTo(b) <= 0;
     }
 
-    public LRATuplePred getDNFOfClassWithIndex(int classIdx) {
-        //todo
-        return null;
+    private Rational findBestThreshold(List<LRATuple> subsetFeatures, List<Integer> subsetLabels, int featureIndex) {
+        TreeSet<Rational> uniqueValues = new TreeSet<>();
+        for (LRATuple row : subsetFeatures) {
+            uniqueValues.add(row.tuple.get(featureIndex));
+        }
+        List<Rational> sortedValues = new ArrayList<>(uniqueValues);
+
+        Rational bestThreshold = sortedValues.getFirst();
+        double bestGain = -1;
+
+        for (int i = 0; i < sortedValues.size() - 1; i++) {
+            // take the middle/average point as a threshold
+            //Rational threshold = (sortedValues.get(i).plus(sortedValues.get(i + 1))).divides(Rational.of(2));
+
+            // Take the smaller one as a leq threshold
+            Rational threshold = sortedValues.get(i);
+
+            List<Integer> leftLabels = new ArrayList<>();
+            List<Integer> rightLabels = new ArrayList<>();
+
+            for (int j = 0; j < subsetFeatures.size(); j++) {
+                if (leq(subsetFeatures.get(j).tuple.get(featureIndex),threshold)) {
+                    leftLabels.add(subsetLabels.get(j));
+                } else {
+                    rightLabels.add(subsetLabels.get(j));
+                }
+            }
+
+            if (!leftLabels.isEmpty() && !rightLabels.isEmpty()) {
+                double gain = informationGain(subsetLabels, leftLabels, rightLabels);
+                if (gain > bestGain) {
+                    bestGain = gain;
+                    bestThreshold = threshold;
+                }
+            }
+        }
+        return bestThreshold;
+    }
+
+    private double entropy(List<Integer> labels) {
+        Map<Integer, Integer> counts = new HashMap<>();
+        labels.forEach(l -> counts.put(l, counts.getOrDefault(l, 0) + 1));
+
+        double entropy = 0.0;
+        int total = labels.size();
+        for (int count : counts.values()) {
+            double p = (double) count / total;
+            entropy -= p * Math.log(p) / Math.log(2);
+        }
+        return entropy;
+    }
+
+    private double informationGain(List<Integer> allLabels, List<Integer> leftLabels, List<Integer> rightLabels) {
+        double parentEntropy = entropy(allLabels);
+
+        double weightLeft = (double) leftLabels.size() / allLabels.size();
+        double weightRight = (double) rightLabels.size() / allLabels.size();
+
+        return parentEntropy - (weightLeft * entropy(leftLabels) + weightRight * entropy(rightLabels));
+    }
+
+    public int classify(LRATuple instance) {
+        TreeADT curr = root;
+        while (true) {
+            switch (curr) {
+                case Leaf l -> {
+                    return l.classLabel;
+                }
+                case Node n -> curr = switch (n.pred) {
+                    case VarRat v -> leq(instance.tuple.get(v.index_left()), v.rat()) ? n.left : n.right;
+                    case VarVar v -> leq(instance.tuple.get(v.index_left()), instance.tuple.get(v.index_right())) ? n.left : n.right;
+                };
+            }
+        }
+    }
+
+    public void printTree() {
+        printTree(root, 0);
+    }
+
+    private void printTree(TreeADT node, int depth) {
+        if (node == null) return;
+        for (int i = 0; i < depth; i++) System.out.print("  ");
+
+        switch (node) {
+            case Leaf l -> {
+                System.out.println("Class: " + l.classLabel);
+            }
+            case Node n -> {
+                switch (n.pred) {
+                    case VarVar v -> System.out.println("Feature idx " + v.index_left() + " <= Feature idx " + v.index_right());
+                    case VarRat v -> System.out.println("Feature index " + v.index_left() + " <= " + v.rat());
+                }
+                printTree(n.left, depth + 1);
+                printTree(n.right, depth + 1);
+            }
+        }
+    }
+
+    public BooleanFormula getDNFForLabel(int label, NumeralFormula.RationalFormula[] variables, BooleanFormulaManager boolMgr, RationalFormulaManager ratMgr) {
+        List<BooleanFormula> fms = getDNFForLabel(label, variables, root, boolMgr, ratMgr);
+        return fms == null ? boolMgr.makeFalse() : boolMgr.or(fms);
+
+    }
+
+    private List<BooleanFormula> getDNFForLabel(int label, NumeralFormula.RationalFormula[] variables, TreeADT tree, BooleanFormulaManager boolMgr, RationalFormulaManager ratMgr) {
+        //Basically, exhaustive DFS
+        switch (tree) {
+            case Leaf l -> {
+                if (l.classLabel == label) {
+                    List<BooleanFormula> res = new ArrayList<>();
+                    res.add(boolMgr.makeTrue());
+                    return res;
+                } else {
+                    return null;
+                }
+            }
+            case Node n -> {
+                List<BooleanFormula> leftFms = getDNFForLabel(label, variables, n.left, boolMgr, ratMgr);
+                List<BooleanFormula> rightFms = getDNFForLabel(label, variables, n.right, boolMgr, ratMgr);
+                BooleanFormula pred = switch (n.pred) {
+                    case VarVar v -> ratMgr.lessOrEquals(variables[v.index_left()], variables[v.index_right()]);
+                    case VarRat r -> ratMgr.lessOrEquals(variables[r.index_left()], ratMgr.makeNumber(r.rat()));
+                };
+
+                BooleanFormula negPred = boolMgr.not(pred);
+
+                leftFms = leftFms != null ? leftFms.stream().map(x -> boolMgr.and(x, pred)).toList() : new ArrayList<>();
+                rightFms = rightFms != null ? rightFms.stream().map(x -> boolMgr.and(x, negPred)).toList() : new ArrayList<>();
+
+                return Stream.concat(leftFms.stream(), rightFms.stream()).toList();
+            }
+        }
     }
 
 
-    public static SymbolicDecisionTree buildTree(List<List<LRATuple>> values) {
-        LRATuple el = values.getFirst().getFirst();
-        return new SymbolicDecisionTree(el.tuple.size());
+    public static void main(String[] args) throws InvalidConfigurationException {
+
+        Configuration config = Configuration.defaultConfiguration();
+        LogManager logger = BasicLogManager.create(config);
+        ShutdownNotifier notifier = ShutdownNotifier.createDummy();
+        SolverContext context =
+                SolverContextFactory.createSolverContext(config, logger, notifier, SolverContextFactory.Solvers.Z3);
+
+        BooleanFormulaManager boolMgr = context.getFormulaManager().getBooleanFormulaManager();
+        RationalFormulaManager ratMgr = context.getFormulaManager().getRationalFormulaManager();
+
+
+        List<LRATuple> features = Arrays.asList(
+                new LRATuple(new Long[]{1L, 2L}) ,
+                new LRATuple(new Long[]{2L, 3L}),
+                new LRATuple(new Long[]{4L, 3L}),
+                new LRATuple(new Long[]{4L, 2L}),
+                new LRATuple(new Long[]{5L, 6L}),
+                new LRATuple(new Long[]{74L, 69L})
+        );
+        List<Integer> labels = Arrays.asList(0, 0, 1, 1,0,0);
+
+        SymbolicDecisionTree tree = SymbolicDecisionTree.buildByIterativeDeepening(features, labels);
+        tree.printTree();
+
+        NumeralFormula.RationalFormula[] variables = new NumeralFormula.RationalFormula[]{ratMgr.makeVariable("x0"), ratMgr.makeVariable("x1")};
+        System.out.println(tree.getDNFForLabel(0,variables,boolMgr,ratMgr));
     }
-
-
 }
