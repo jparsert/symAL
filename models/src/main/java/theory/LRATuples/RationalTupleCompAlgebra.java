@@ -1,7 +1,6 @@
 package theory.LRATuples;
 
 import com.google.common.collect.ImmutableList;
-import jdk.jshell.spi.ExecutionControl;
 import org.sat4j.specs.TimeoutException;
 import org.sosy_lab.common.rationals.Rational;
 import org.sosy_lab.java_smt.api.*;
@@ -162,4 +161,5 @@ public class RationalTupleCompAlgebra extends BooleanAlgebra<BooleanFormula, LRA
     public Pair<LRATuple, LRATuple> generateWitnesses(BooleanFormula p1) throws TimeoutException {
         throw new TimeoutException("HasModel for binary Predicate not Implemented");
     }
+
 }

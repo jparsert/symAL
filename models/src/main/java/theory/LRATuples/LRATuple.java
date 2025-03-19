@@ -47,5 +47,19 @@ public class LRATuple  {
 
     }
 
+    @Override
+    public String toString() {
+       StringBuilder builder = new StringBuilder();
+       builder.append("(");
+       for(int i=0; i<tuple.size(); i++) {
+           builder.append(tuple.get(i));
+           if(i < tuple.size() - 1) {
+               builder.append(",");
+           }
+       }
+       builder.append(")");
+       return builder.toString();
+    }
+
 
 }

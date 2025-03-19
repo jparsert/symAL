@@ -56,15 +56,14 @@ public class SRA<P, S> {
 
 	/**
 	 * Returns the empty SRA for the Boolean algebra <code>ba</code>
-	 * @throws TimeoutException 
-	 */
+     */
 	public static <A, B> SRA<A, B> getEmptySRA(BooleanAlgebra<A, B> ba) throws TimeoutException {
-		SRA<A, B> aut = new SRA<A, B>();
-		aut.states = new HashSet<Integer>();
+		SRA<A, B> aut = new SRA<>();
+		aut.states = new HashSet<>();
 		aut.states.add(0);
-		aut.finalStates = new HashSet<Integer>();
+		aut.finalStates = new HashSet<>();
 		aut.initialState = 0;
-        aut.registers = new LinkedList<B>();
+        aut.registers = new LinkedList<>();
         aut.registers.add(null);
 		aut.isDeterministic = true;
 		aut.isEmpty = true;
@@ -79,15 +78,14 @@ public class SRA<P, S> {
 	/**
 	 * Returns the SRA accepting every string in the Boolean algebra
 	 * <code>ba</code>
-	 * @throws TimeoutException 
-	 */
+     */
 	public static <A, B> SRA<A, B> getFullSRA(BooleanAlgebra<A, B> ba) throws TimeoutException {
-		SRA<A, B> aut = new SRA<A, B>();
-		aut.states = new HashSet<Integer>();
+		SRA<A, B> aut = new SRA<>();
+		aut.states = new HashSet<>();
 		aut.states.add(0);
-		aut.finalStates = new HashSet<Integer>(aut.states);
+		aut.finalStates = new HashSet<>(aut.states);
 		aut.initialState = 0;
-        aut.registers = new LinkedList<B>();
+        aut.registers = new LinkedList<>();
         aut.registers.add(null);
 		aut.isDeterministic = true;
 		aut.isEmpty = false;
@@ -153,9 +151,8 @@ public class SRA<P, S> {
 
 	/**
 	 * Create an automaton and removes unreachable states
-	 * 
-	 * @throws TimeoutException
-	 */
+	 *
+     */
 	public static <A, B> SRA<A, B> MkSRA(Collection<SRAMove<A, B>> transitions, Integer initialState,
 			Collection<Integer> finalStates, LinkedList<B> registers, BooleanAlgebra<A, B> ba) throws TimeoutException {
     
@@ -166,9 +163,8 @@ public class SRA<P, S> {
 	/**
 	 * Create an automaton and removes unreachable states and only removes
 	 * unreachable states if <code>remUnreachableStates<code> is true
-	 * 
-	 * @throws TimeoutException
-	 */
+	 *
+     */
 	public static <A, B> SRA<A, B> MkSRA(Collection<SRAMove<A, B>> transitions, Integer initialState,
 			Collection<Integer> finalStates, LinkedList<B> registers, BooleanAlgebra<A, B> ba, boolean remUnreachableStates)
 					throws TimeoutException {
@@ -286,8 +282,7 @@ public class SRA<P, S> {
 	/**
 	 * Adds a transition to the SRA.
 	 *
-	 * @throws TimeoutException
-	 */
+     */
 	private void addTransition(SRAMove<P, S> transition, BooleanAlgebra<P, S> ba, boolean skipSatCheck) throws TimeoutException {
 		if (skipSatCheck || transition.isSatisfiable(ba)) {
 
@@ -301,32 +296,38 @@ public class SRA<P, S> {
 			states.add(transition.from);
 			states.add(transition.to);
 
-            if (transition instanceof SRACheckMove<?, ?>) {
-				getCheckMovesFrom(transition.from).add((SRACheckMove<P, S>) transition);
-				getCheckMovesTo(transition.to).add((SRACheckMove<P, S>) transition);
-			} else if (transition instanceof SRAFreshMove<?, ?>) {
-				getFreshMovesFrom(transition.from).add((SRAFreshMove<P, S>) transition);
-				getFreshMovesTo(transition.to).add((SRAFreshMove<P, S>) transition);
-			} else if (transition instanceof  SRAStoreMove<?, ?>) {
-				isSingleValued = false; // Store moves are not allowed for non single-valued SRAs
-				getStoreMovesFrom(transition.from).add((SRAStoreMove<P, S>) transition);
-				getStoreMovesTo(transition.to).add((SRAStoreMove<P, S>) transition);
-			} else {
-				if (transition.E.size() == 1 && transition.I.isEmpty() && transition.U.isEmpty()) {
-					getCheckMovesFrom(transition.from).add((new SRACheckMove<P, S>(transition.from, transition.to, transition.guard, transition.E.iterator().next())));
-					getCheckMovesTo(transition.to).add((new SRACheckMove<P, S>(transition.from, transition.to, transition.guard, transition.E.iterator().next())));
-				} else if (transition.E.isEmpty() && transition.I.size() == registers.size() && transition.U.size() == 1) {
-					getFreshMovesFrom(transition.from).add((new SRAFreshMove<P, S>(transition.from, transition.to, transition.guard, transition.U.iterator().next(), registers.size())));
-					getFreshMovesTo(transition.to).add((new SRAFreshMove<P, S>(transition.from, transition.to, transition.guard, transition.U.iterator().next(), registers.size())));
-				} else if (transition.E.isEmpty() && transition.I.isEmpty() && transition.U.size() == 1) {
-					getStoreMovesFrom(transition.from).add((new SRAStoreMove<P, S>(transition.from, transition.to, transition.guard, transition.U.iterator().next())));
-					getStoreMovesTo(transition.to).add((new SRAStoreMove<P, S>(transition.from, transition.to, transition.guard, transition.U.iterator().next())));
-				} else {
-					isSingleValued = false;
-					getSRAMovesFrom(transition.from).add(transition);
-					getSRAMovesTo(transition.to).add(transition);
-				}
-			}
+            switch (transition) {
+                case SRACheckMove<?, ?> sraCheckMove -> {
+                    getCheckMovesFrom(transition.from).add((SRACheckMove<P, S>) transition);
+                    getCheckMovesTo(transition.to).add((SRACheckMove<P, S>) transition);
+                }
+                case SRAFreshMove<?, ?> sraFreshMove -> {
+                    getFreshMovesFrom(transition.from).add((SRAFreshMove<P, S>) transition);
+                    getFreshMovesTo(transition.to).add((SRAFreshMove<P, S>) transition);
+                }
+                case SRAStoreMove<?, ?> sraStoreMove -> {
+                    isSingleValued = false; // Store moves are not allowed for non single-valued SRAs
+
+                    getStoreMovesFrom(transition.from).add((SRAStoreMove<P, S>) transition);
+                    getStoreMovesTo(transition.to).add((SRAStoreMove<P, S>) transition);
+                }
+                default -> {
+                    if (transition.E.size() == 1 && transition.I.isEmpty() && transition.U.isEmpty()) {
+                        getCheckMovesFrom(transition.from).add((new SRACheckMove<P, S>(transition.from, transition.to, transition.guard, transition.E.iterator().next())));
+                        getCheckMovesTo(transition.to).add((new SRACheckMove<P, S>(transition.from, transition.to, transition.guard, transition.E.iterator().next())));
+                    } else if (transition.E.isEmpty() && transition.I.size() == registers.size() && transition.U.size() == 1) {
+                        getFreshMovesFrom(transition.from).add((new SRAFreshMove<P, S>(transition.from, transition.to, transition.guard, transition.U.iterator().next(), registers.size())));
+                        getFreshMovesTo(transition.to).add((new SRAFreshMove<P, S>(transition.from, transition.to, transition.guard, transition.U.iterator().next(), registers.size())));
+                    } else if (transition.E.isEmpty() && transition.I.isEmpty() && transition.U.size() == 1) {
+                        getStoreMovesFrom(transition.from).add((new SRAStoreMove<P, S>(transition.from, transition.to, transition.guard, transition.U.iterator().next())));
+                        getStoreMovesTo(transition.to).add((new SRAStoreMove<P, S>(transition.from, transition.to, transition.guard, transition.U.iterator().next())));
+                    } else {
+                        isSingleValued = false;
+                        getSRAMovesFrom(transition.from).add(transition);
+                        getSRAMovesTo(transition.to).add(transition);
+                    }
+                }
+            }
 		}
 	}
 
@@ -389,11 +390,8 @@ public class SRA<P, S> {
 	/**
 	 * Returns true if the machine accepts the input list
 	 * 
-	 * @param input
-	 * @param ba
 	 * @return true if accepted false otherwise
-	 * @throws TimeoutException 
-	 */
+     */
 	public boolean accepts(List<S> input, BooleanAlgebra<P, S> ba) throws TimeoutException {
 		Collection<Configuration> currConf = new LinkedList<>();
 		currConf.add(new Configuration(initialState, new LinkedList<>(registers)));
@@ -488,8 +486,8 @@ public class SRA<P, S> {
 	}
 
 	private class Configuration {
-		private Integer state;
-		private LinkedList<S> regValues;
+		private final Integer state;
+		private final LinkedList<S> regValues;
 
 		public Configuration(Integer state, LinkedList<S> regValues) {
 			this.state = state;
@@ -529,7 +527,7 @@ public class SRA<P, S> {
 	 * @return true if <code>state</code> is an initial state
 	 */
 	public boolean isInitialState(Integer state) {
-		return getInitialState() == state;
+		return getInitialState().equals(state);
 	}
 
 	/**
@@ -569,7 +567,7 @@ public class SRA<P, S> {
 	}
 
 	/**
-	 * @return a list of predicates without duplicates
+	 * @return a set of predicates without duplicates
 	 */
 	private HashSet<P> getAllPredicates(long timeout) {
 		HashSet<P> predicatesSet = new HashSet<>();
@@ -609,7 +607,7 @@ public class SRA<P, S> {
 	 */
 	protected static class MinTerm<P> {
 
-		private Pair<P, ArrayList<Integer>> data;
+		private final Pair<P, ArrayList<Integer>> data;
 
 		MinTerm(P pred, ArrayList<Integer> bitVec) {
 			data = new Pair<>(pred, bitVec);
@@ -647,10 +645,10 @@ public class SRA<P, S> {
 	 * Encapsulates normal SRA state
 	 */
 	static class NormSRAState<P> {
-		private Pair<Integer, HashMap<Integer, MinTerm<P>>> data;
+		private final Pair<Integer, HashMap<Integer, MinTerm<P>>> data;
 
 		NormSRAState(Integer stateID, HashMap<Integer, MinTerm<P>> regAbs) {
-			data = new Pair(stateID, regAbs);
+			data = new Pair<>(stateID, regAbs);
 		}
 
 		@Override
@@ -828,7 +826,7 @@ public class SRA<P, S> {
 		for (P pred: allPredicates) {
 			LinkedList<MinTerm<P>> mintList = new LinkedList<>();
 
-			Integer predicateIndex = allPredicates.indexOf(pred);
+			int predicateIndex = allPredicates.indexOf(pred);
 
 			for (MinTerm<P> mint: minTerms) {
 				if (mint.getBitVector().get(predicateIndex) == 1) // pred is non-negated in mint
@@ -852,7 +850,7 @@ public class SRA<P, S> {
 
 		//Integer notNullInd = 0;
 
-		for (Integer r = 0; r < registers.size(); r++) {
+		for (int r = 0; r < registers.size(); r++) {
 			S regVal = registers.get(r);
 
 			if (regVal == null)
@@ -860,7 +858,7 @@ public class SRA<P, S> {
 			else
 			{
 				P atom = ba.MkAtom(regVal);
-				initRegAb.put(r, mintermsForPredicates.get(atom).get(0));
+				initRegAb.put(r, mintermsForPredicates.get(atom).getFirst());
 			}
 		}
 //		for (Integer r = 0; r < registers.size(); r++) {
@@ -971,7 +969,7 @@ public class SRA<P, S> {
 
 	public HashMap<Pair<Integer, Integer>, P> getPredMap(BooleanAlgebra<P, S> ba) throws TimeoutException {
 		HashMap<Pair<Integer, Integer>, P> predMap = new HashMap<>();
-		Integer regSize = registers.size();
+		int regSize = registers.size();
 
 		HashMap<Integer, Integer> reached = new HashMap<>();
 		LinkedList<Integer> toVisit = new LinkedList<>();
@@ -1055,7 +1053,7 @@ public class SRA<P, S> {
 		SRAMove<P,S> freshSinkLoop = new SRAFreshMove<>(sinkState, sinkState, ba.True(), chosenReg, regSize);
 		addTransition(freshSinkLoop, ba, false);
 
-		for (Integer r = 0; r < registers.size(); r++) {
+		for (int r = 0; r < registers.size(); r++) {
 			addTransition(new SRACheckMove<>(sinkState, sinkState, ba.True(), r), ba,false);
 		}
 
@@ -1130,8 +1128,7 @@ public class SRA<P, S> {
 
 		// Integer initValPos1 = allPredicates.size();
 
-		for (P predicate: getAllPredicates(timeout))
-			allPredicatesSet.add(predicate);
+        allPredicatesSet.addAll(getAllPredicates(timeout));
 
 		for (S regVal: registers) // Add initial register values of aut1 to predicates
 			if (regVal != null) {
@@ -1169,11 +1166,8 @@ public class SRA<P, S> {
 			throws TimeoutException {
 
 		if (aut1.isEmpty) {
-			if (bisimulation && !aut2.isEmpty)
-				return false;
-
-			return true;
-		}
+            return !bisimulation || aut2.isEmpty;
+        }
 
 
 		if(!aut1.isSingleValued)
@@ -1190,7 +1184,7 @@ public class SRA<P, S> {
 		HashMap<Integer, Integer> initRegMapInv = new HashMap<>();
 
 		for (Integer r1 = 0; r1 < aut1.registers.size(); r1++) {
-			for (Integer r2 = 0; r2 < aut2.registers.size(); r2++) {
+			for (int r2 = 0; r2 < aut2.registers.size(); r2++) {
 				S r1Content = aut1.registers.get(r1);
 				S r2Content = aut2.registers.get(r2);
 
@@ -1206,8 +1200,7 @@ public class SRA<P, S> {
 
 		// Integer initValPos1 = allPredicates.size();
 
-		for (P predicate: aut2.getAllPredicates(timeout))
-				allPredicatesSet.add(predicate);
+        allPredicatesSet.addAll(aut2.getAllPredicates(timeout));
 
 		for (S regVal: aut1.registers) // Add initial register values of aut1 to predicates
 			if (regVal != null) {
@@ -1428,7 +1421,7 @@ public class SRA<P, S> {
 				// Case 2(a)
 
 				// regInImg(r) = false iff r not in img(regMap)
-				Integer regNum2 = regAbs2.size();
+				int regNum2 = regAbs2.size();
 				boolean[] regInImg = new boolean[regNum2];
 				Arrays.fill(regInImg, false);
 
@@ -1505,8 +1498,7 @@ public class SRA<P, S> {
 	/**
 	 * Compiles <code>this</code> down to an equivalent Single-valued SRA
 	 *
-	 * @throws TimeoutException
-	 */
+     */
 	public SRA<P, S> toSingleValuedSRA(BooleanAlgebra<P, S> ba, long timeout) throws TimeoutException {
 
         long startTime = System.currentTimeMillis();
@@ -1522,9 +1514,9 @@ public class SRA<P, S> {
 
 		// Initialise register indexes
 		HashSet<Integer> regIndexes = new HashSet<>();
-		Integer regNum = registers.size();
+		int regNum = registers.size();
 
-		for (Integer r = 0; r < regNum; r++) // FIXME: no garbage register
+		for (int r = 0; r < regNum; r++) // FIXME: no garbage register
 			regIndexes.add(r);
 
 
@@ -1537,7 +1529,7 @@ public class SRA<P, S> {
         //newRegisters.add(registers.size(), null);
 
         HashMap<S, ArrayList<Integer>> valueToRegisters = new HashMap<S, ArrayList<Integer>>();
-        for (Integer index = 0; index < regNum; index++) {
+        for (int index = 0; index < regNum; index++) {
             S registerValue = newRegisters.get(index);
             if (valueToRegisters.containsKey(registerValue)) {
                 valueToRegisters.get(registerValue).add(index);
@@ -1552,7 +1544,7 @@ public class SRA<P, S> {
 
         HashMap<Integer, Integer> initialMap = new HashMap<Integer, Integer>();
         for (ArrayList<Integer> repeatedRegisters : valueToRegisters.values()) {
-            Integer firstElement = repeatedRegisters.get(0);
+            Integer firstElement = repeatedRegisters.getFirst();
             initialMap.put(firstElement, firstElement);
 
             for (int i = 1; i < repeatedRegisters.size(); i++) {

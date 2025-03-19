@@ -17,7 +17,7 @@ public class SFAEpsilon<U,S> extends SFAMove<U,S> {
 
 	/**
 	 * Constructs an FSA Transition that starts from state <code>from</code> and ends at state
-	 * <code>to</code> with input <code>input</code>
+	 * <code>to</code> that is always satisfiable.
 	 */
 	public SFAEpsilon(Integer from, Integer to) {
 		super(from, to);
