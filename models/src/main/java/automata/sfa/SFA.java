@@ -54,8 +54,7 @@ public class SFA<P, S> extends Automaton<P, S> {
 		aut.isEmpty = true;
 		aut.isEpsilonFree = true;
 		aut.maxStateId = 1;
-		// REALLY?
-		//aut.addTransition(new SFAInputMove<A, B>(0, 0, ba.True()), ba, true);
+		aut.addTransition(new SFAInputMove<A, B>(0, 0, ba.True()), ba, true);
 		return aut;
 	}
 
@@ -218,8 +217,9 @@ public class SFA<P, S> extends Automaton<P, S> {
 		if (remUnreachableStates)
 			aut = removeDeadOrUnreachableStates(aut, ba);
 
-		if (aut.finalStates.isEmpty() && !keepEmpty)
+		if (aut.finalStates.isEmpty() && !keepEmpty) {
 			return getEmptySFA(ba);
+		}
 
 		return aut;
 	}
@@ -313,7 +313,7 @@ public class SFA<P, S> extends Automaton<P, S> {
 	public static <A,B> SFA<A,B> MkPTA(Collection<List<B>> positive, Collection<List<B>> negative, BooleanAlgebra<A,B> algebra)
 			throws TimeoutException, DeterminismViolationException {
 
-		SFA<A,B> automaton = SFA.getEmptySFA(algebra);
+		SFA<A,B> automaton = SFA.MkSFA(new ArrayList<>(),0, new ArrayList<>(), algebra, false,false, true);
 		// the following necessary?
 		//automaton.removeEpsilonMoves(algebra);
 
