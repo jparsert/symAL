@@ -30,7 +30,9 @@ public class RPNITest {
 
         BooleanAlgebra<BooleanFormula, LRATuple> algebra = new RationalTupleCompAlgebra(2);
 
-        SFA<BooleanFormula,LRATuple> res = RPNI.MakeRPNI(lratuple.getPositiveSamples(), lratuple.getNegativeSamples(), algebra);
+        RPNI<BooleanFormula, LRATuple> rpni = new RPNI<>();
+
+        SFA<BooleanFormula,LRATuple> res = rpni.runRPNI(lratuple.getPositiveSamples(), lratuple.getNegativeSamples(), algebra);
         res.createDotFile("ASD", "/home/julian/");
 
         for (List<LRATuple> e : lratuple.getPositiveSamples()) {
