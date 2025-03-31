@@ -81,15 +81,13 @@ public class RPNITest {
         RPNI<BooleanFormula, LRATuple> rpni = new RPNI<>();
 
         SFA<BooleanFormula,LRATuple> res = rpni.runRPNI(lratuple.getPositiveSamples(), lratuple.getNegativeSamples(), algebra);
-        res.createDotFile("ASD", "/home/julian/");
 
         for (List<LRATuple> e : lratuple.getPositiveSamples()) {
             assertTrue(format("The following sample should be accepted but is rejected: %s", e), res.accepts(e, algebra));
         }
 
-        // not implemented yet
         for (List<LRATuple> e : lratuple.getNegativeSamples()) {
-            assertFalse(res.accepts(e, algebra));
+            assertFalse(format("The following sample should NOT be accepted but is accepted: %s", e), res.accepts(e, algebra));
         }
 
         res.createDotFile("RPNIEND", "/home/julian/");
@@ -106,10 +104,8 @@ public class RPNITest {
 
         //SFA<BooleanFormula,LRATuple> res = rpni.runRPNI(lratuple.getPositiveSamples(), lratuple.getNegativeSamples(), algebra);
         SFA<BooleanFormula, LRATuple> res = SFA.MkPTA(lratuple.getPositiveSamples(), lratuple.getNegativeSamples(), algebra);
-        res.createDotFile("ASD", "/home/julian/");
 
         rpni.RPNIMerge(res, 1, 2, algebra);
-        res.createDotFile("ASD1", "/home/julian/");
 
     }
 
