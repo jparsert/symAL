@@ -21,6 +21,8 @@ import theory.BooleanAlgebra;
 import theory.LRATuples.RationalTupleCompAlgebra;
 import utilities.*;
 
+import static java.io.IO.println;
+
 /**
  * Symbolic finite automaton
  * 
@@ -353,15 +355,47 @@ public class SFA<P, S> extends Automaton<P, S> {
 			states.add(transition.to);
 
 			if (!transition.isEpsilonTransition()) {
-				getInputMovesFrom(transition.from).add((SFAInputMove<P, S>) transition);
-				getInputMovesTo(transition.to).add((SFAInputMove<P, S>) transition);
+				SFAInputMove<P,S> mv = (SFAInputMove<P, S>) transition;
+				getInputMovesFrom(transition.from).add(mv);
+				getInputMovesTo(transition.to).add(mv);
 			} else {
-				getEpsilonFrom(transition.from).add((SFAEpsilon<P, S>) transition);
-				getEpsilonTo(transition.to).add((SFAEpsilon<P, S>) transition);
+				SFAEpsilon<P,S> mv = (SFAEpsilon<P, S>) transition;
+				getEpsilonFrom(transition.from).add(mv);
+				getEpsilonTo(transition.to).add(mv);
 			}
 		}
 	}
 
+	private void removeTransition(SFAMove<P, S> transition) {
+
+
+		switch (transition) {
+			case SFAEpsilon<P,S> tran -> {
+				this.epsilonFrom.get(tran.from).remove(tran);
+				this.epsilonTo.get(tran.to).remove(tran);
+			}
+			case SFAInputMove<P,S> tran -> {
+				this.inputMovesFrom.get(tran.from).remove(tran);
+				this.inputMovesTo.get(tran.to).remove(tran);
+			}
+            default -> throw new IllegalStateException("Unexpected SFATransition Type: " + transition.getClass());
+        }
+	}
+
+	public void bendMoveSource(SFAMove<P,S> move, Integer newSource, BooleanAlgebra<P,S> algebra) throws TimeoutException {
+		removeTransition(move);
+		SFAMove<P,S> newMv = (SFAMove<P,S>) move.clone();
+		newMv.from = newSource;
+		addTransition(newMv, algebra, true);
+	}
+
+	public void bendMoveTarget(SFAMove<P,S> move, Integer newTarget, BooleanAlgebra<P,S> algebra) throws TimeoutException {
+		removeTransition(move);
+		SFAMove<P,S> newMv = (SFAMove<P,S>) move.clone();
+		newMv.to = newTarget;
+		addTransition(newMv, algebra, true);
+	}
+	
 	// ------------------------------------------------------
 	// Boolean automata operations
 	// ------------------------------------------------------
@@ -1745,7 +1779,7 @@ public class SFA<P, S> extends Automaton<P, S> {
 
 		PositiveBooleanExpression init = boolexpr.MkState(noneps.initialState);
 
-		Collection<SAFAInputMove<P, S>> moves = new LinkedList<>();
+		Collection<SAFAInputMove<P, S>> moves = new HashSet<>();
 		for (SFAInputMove<P, S> move : noneps.getInputMovesFrom(noneps.states))
 			moves.add(new SAFAInputMove<P, S>(move.from, boolexpr.MkState(move.to), move.guard));
 
@@ -1796,7 +1830,7 @@ public class SFA<P, S> extends Automaton<P, S> {
 	// ------------------------------------------------------
 
 	// creates a new SFA where all unreachable or dead states have been removed
-	private static <A, B> SFA<A, B> removeDeadOrUnreachableStates(SFA<A, B> aut, BooleanAlgebra<A, B> ba)
+	public static <A, B> SFA<A, B> removeDeadOrUnreachableStates(SFA<A, B> aut, BooleanAlgebra<A, B> ba)
 			throws TimeoutException {
 
 		// components of new SFA
@@ -1901,7 +1935,7 @@ public class SFA<P, S> extends Automaton<P, S> {
 	 * Returns the set of transitions starting set of states
 	 */
 	public Collection<SFAMove<P, S>> getTransitionsFrom(Collection<Integer> stateSet) {
-		Collection<SFAMove<P, S>> transitions = new LinkedList<SFAMove<P, S>>();
+		Collection<SFAMove<P, S>> transitions = new HashSet<>();
 		for (Integer state : stateSet)
 			transitions.addAll(getTransitionsFrom(state));
 		return transitions;
@@ -1911,7 +1945,7 @@ public class SFA<P, S> extends Automaton<P, S> {
 	 * Returns the set of transitions to a set of states
 	 */
 	public Collection<SFAMove<P, S>> getTransitionsTo(Collection<Integer> stateSet) {
-		Collection<SFAMove<P, S>> transitions = new LinkedList<SFAMove<P, S>>();
+		Collection<SFAMove<P, S>> transitions = new HashSet<SFAMove<P, S>>();
 		for (Integer state : stateSet)
 			transitions.addAll(getTransitionsTo(state));
 		return transitions;
@@ -1957,7 +1991,7 @@ public class SFA<P, S> extends Automaton<P, S> {
 	 * Returns the set of transitions starting set of states
 	 */
 	public Collection<SFAEpsilon<P, S>> getEpsilonFrom(Collection<Integer> stateSet) {
-		Collection<SFAEpsilon<P, S>> transitions = new LinkedList<SFAEpsilon<P, S>>();
+		Collection<SFAEpsilon<P, S>> transitions = new HashSet<>();
 		for (Integer state : stateSet)
 			transitions.addAll(getEpsilonFrom(state));
 		return transitions;
@@ -1980,7 +2014,7 @@ public class SFA<P, S> extends Automaton<P, S> {
 	 * Returns the set of transitions starting set of states
 	 */
 	public Collection<SFAInputMove<P, S>> getInputMovesTo(Collection<Integer> stateSet) {
-		Collection<SFAInputMove<P, S>> transitions = new LinkedList<SFAInputMove<P, S>>();
+		Collection<SFAInputMove<P, S>> transitions = new HashSet<SFAInputMove<P, S>>();
 		for (Integer state : stateSet)
 			transitions.addAll(getInputMovesTo(state));
 		return transitions;
@@ -2003,7 +2037,7 @@ public class SFA<P, S> extends Automaton<P, S> {
 	 * Returns the set of transitions starting set of states
 	 */
 	public Collection<SFAInputMove<P, S>> getInputMovesFrom(Collection<Integer> stateSet) {
-		Collection<SFAInputMove<P, S>> transitions = new LinkedList<SFAInputMove<P, S>>();
+		Collection<SFAInputMove<P, S>> transitions = new HashSet<SFAInputMove<P, S>>();
 		for (Integer state : stateSet)
 			transitions.addAll(getInputMovesFrom(state));
 		return transitions;
@@ -2013,7 +2047,7 @@ public class SFA<P, S> extends Automaton<P, S> {
 	 * Returns the set of transitions starting set of states
 	 */
 	public Collection<SFAMove<P, S>> getTransitions() {
-		Collection<SFAMove<P, S>> transitions = new LinkedList<SFAMove<P, S>>();
+		Collection<SFAMove<P, S>> transitions = new HashSet<SFAMove<P, S>>();
 		for (Integer state : states)
 			transitions.addAll(getTransitionsFrom(state));
 		return transitions;
@@ -2025,14 +2059,14 @@ public class SFA<P, S> extends Automaton<P, S> {
 
 	@Override
 	public Collection<Move<P, S>> getMovesFrom(Integer state) {
-		Collection<Move<P, S>> transitions = new LinkedList<Move<P, S>>();
+		Collection<Move<P, S>> transitions = new HashSet<>();
 		transitions.addAll(getTransitionsFrom(state));
 		return transitions;
 	}
 
 	@Override
 	public Collection<Move<P, S>> getMovesTo(Integer state) {
-		Collection<Move<P, S>> transitions = new LinkedList<Move<P, S>>();
+		Collection<Move<P, S>> transitions = new HashSet<Move<P, S>>();
 		transitions.addAll(getTransitionsTo(state));
 		return transitions;
 	}

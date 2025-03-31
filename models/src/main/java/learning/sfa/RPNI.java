@@ -4,6 +4,7 @@ package learning.sfa;
 import automata.Move;
 import automata.sfa.SFA;
 import automata.sfa.SFAInputMove;
+import automata.sfa.SFAMove;
 import org.sat4j.specs.TimeoutException;
 import theory.BooleanAlgebra;
 import utilities.DeterminismViolationException;
@@ -12,6 +13,8 @@ import utilities.Pair;
 
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static java.io.IO.println;
 
 // RPNI
 // Regular Positive and Negative Inference
@@ -33,41 +36,44 @@ public class RPNI<P,S> {
     public SFA<P,S> runRPNI(Collection<List<S>> positive, Collection<List<S>> negative, BooleanAlgebra<P, S> algebra) throws DeterminismViolationException, TimeoutException {
 
         SFA<P,S> A = SFA.MkPTA(positive, new ArrayList<>(), algebra);
+
+        //A.createDotFile("B", "/home/julian/");
+
         redStates.add(A.getInitialState());
         // The book is lacking a definition for PREF(S+). The book initialises the blue states with the states reached by
         // intersection between alphabet and (probably) prefixes of S+.
         // If I understand correctly this is just the single step reachable states from the start state.
-        blueStates.addAll(A.getMovesFrom(A.getInitialState()).stream().map((mv -> mv.to)).collect(Collectors.toSet()));
-
+        blueStates.addAll(A.getTransitionsFrom(A.getInitialState()).stream().map((mv -> mv.to)).collect(Collectors.toSet()));
 
         while (!blueStates.isEmpty()) {
             int qb = choose(A, blueStates);
-            blueStates.remove(qb);
 
             Optional<Pair<Integer, SFA<P,S>>> compMerge = getCompatibleRedMerge(A, qb, negative, algebra);
             if (compMerge.isPresent()) {
                 A = compMerge.get().second;
                 for (int q : redStates) {
-                    for (Move<P,S> move : A.getMovesFrom(q)) {
+                    for (Move<P,S> move : A.getTransitionsFrom(q)) {
                         if (! redStates.contains(move.to)) {
                             blueStates.add(move.to);
                         }
                     }
                 }
-
             } else {
                 RPNIPromote(A, qb);
             }
-
+            blueStates.remove(qb); // In book this is done right after choose() is called
         }
         return A;
     }
 
     private Optional<Pair<Integer, SFA<P,S>>> getCompatibleRedMerge(SFA<P,S> A, int qb, Collection<List<S>> negative, BooleanAlgebra<P, S> algebra) throws TimeoutException {
         for (int qr : redStates) {
-            SFA<P,S> tmpA = RPNIMerge(A,qr, qb, algebra);
-            if (RPNICompatible(tmpA, negative, algebra)) {
-                return Optional.of(new Pair<>(qr, tmpA));
+            SFA<P,S> tmpA = (SFA<P, S>) A.clone();
+            SFA<P,S> mergedA = RPNIMerge(tmpA, qr, qb, algebra);
+            if (RPNICompatible(mergedA, negative, algebra)) {
+                mergedA = SFA.removeDeadOrUnreachableStates(mergedA, algebra);
+                mergedA.createDotFile("ASD", "/home/julian/");
+                return Optional.of(new Pair<>(qr, mergedA));
             }
         }
 
@@ -87,8 +93,8 @@ public class RPNI<P,S> {
         redStates.add(state);
 
         // add all one step reachable states to blue states
-        Collection<Move<P, S>> moves = A.getMovesFrom(state);
-        for(Move<P,S> mv : moves) {
+        Collection<SFAMove<P, S>> moves = A.getTransitionsFrom(state);
+        for(SFAMove<P,S> mv : moves) {
             blueStates.add(mv.to);
         }
 
@@ -103,25 +109,26 @@ public class RPNI<P,S> {
         return true;
     }
 
-    private SFA<P,S> RPNIMerge(SFA<P,S> A, int q, int qPrime, BooleanAlgebra<P, S> ba) throws TimeoutException {
-        assert redStates.contains(q);
+    public SFA<P,S> RPNIMerge(SFA<P,S> A, int q, int qPrime, BooleanAlgebra<P, S> ba) throws TimeoutException {
+        //assert redStates.contains(q);
         //todo the following assertion is probably wrong in the book
         //assert blueStates.contains(qPrime);
 
-        Collection<Move<P,S>> moves =  A.getMovesTo(qPrime);
-        for (Move<P,S> mv : moves) {
+        println("Mege " + q + " " + qPrime);
+        A = SFA.removeDeadOrUnreachableStates(A, ba);
+        A.createDotFile("TOMERGE", "/home/julian/");
+        Collection<SFAMove<P,S>> moves =  A.getTransitions();
+        //assert moves.size() == 1; // this should be unique because 'qPrime is/was blue and is therefore the root of a tree'
+        for (SFAMove<P,S> mv : moves) {
             if (mv.to.equals(qPrime)) {
-                A.getMoves().remove(mv);
-                mv.to = q;
-                A.getMoves().add(mv);
+                A.bendMoveTarget(mv, q, ba);
                 return RPNIFold(A,q,qPrime,ba);
             }
         }
-        A.createDotFile("ASD", "/home/julian/");
-        throw new InvariantViolationException("We could not find a parent node of qPrime in the moves during RPNI-MERGE! This should not happen!");
+        throw new InvariantViolationException("We could not find a parent node of " + qPrime + " in the moves during RPNI-MERGE! This should not happen!");
     }
 
-    private SFA<P,S> RPNIFold(SFA<P,S> A, int q, int qPrime, BooleanAlgebra<P, S> ba) {
+    public SFA<P,S> RPNIFold(SFA<P,S> A, int q, int qPrime, BooleanAlgebra<P, S> ba) throws TimeoutException {
         assert A.getStates().contains(q);
         assert A.getStates().contains(qPrime);
         // qPrime should be the root of a tree
@@ -130,21 +137,30 @@ public class RPNI<P,S> {
             A.getFinalStates().add(q);
         }
 
-        for(Move<P, S> mvqP : A.getMovesFrom(qPrime)) {
-            if (mvqP instanceof SFAInputMove<P, S> inputMoveqP) {
-                for(Move<P, S> mvq : A.getMovesFrom(q)) {
-                    SFAInputMove<P,S> inputMoveq = (SFAInputMove<P, S>) mvq;
-                    if (inputMoveq.guard.equals(inputMoveqP.guard)) {
-                        A = RPNIFold(A, inputMoveq.to, inputMoveqP.to, ba);
+        //todo this is wrong, we need to update the list continuously
+        // todo redesign algorithm
+        Collection<SFAMove<P,S>> workList = A.getTransitionsFrom(qPrime);
+        while(!workList.isEmpty()) {
+            var dAqP = workList.iterator().next();// transition that has q' as parent
+            assert dAqP.from == qPrime;
+
+            if (dAqP instanceof SFAInputMove<P, S> dAqPmv) { // ensure correct type when casting
+                for(SFAMove<P, S> mvq : A.getTransitionsFrom(q)) {
+                    SFAInputMove<P,S> daq = (SFAInputMove<P, S>) mvq;
+                    if (daq.guard.equals(dAqPmv.guard)) { // this will rarely occur in SFAs
+                        A = RPNIFold(A, daq.to, dAqPmv.to, ba);
                     } else {
-                        A.getMoves().remove(inputMoveq);
-                        inputMoveq.to = inputMoveqP.to;
-                        A.getMoves().add(inputMoveq);
+                        A.bendMoveSource(dAqPmv,q, ba);
                     }
                 }
             } else {
-                throw new InvariantViolationException("We should be dealing exclusively with SFAInputMove. But here we have something else.");
+                throw new InvariantViolationException("We should be dealing exclusively with SFAInputMove. But here we have " + dAqP.getClass());
             }
+            println("Fold: " + workList);
+            workList = A.getTransitionsFrom(qPrime);
+            workList.remove(dAqPmv);
+            println("Fold: " + workList);
+
         }
         return A;
     }

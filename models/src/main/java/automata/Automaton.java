@@ -20,6 +20,8 @@ import org.sat4j.specs.TimeoutException;
 
 import theory.BooleanAlgebra;
 
+import static java.io.IO.println;
+
 /**
  * Automaton abstract class
  * 

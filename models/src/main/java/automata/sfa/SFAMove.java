@@ -12,6 +12,8 @@ import org.sat4j.specs.TimeoutException;
 
 import automata.Move;
 
+import java.util.Objects;
+
 /**
  * Abstract SFA Move
  * @param <P> set of predicates over the domain S
@@ -37,4 +39,8 @@ public abstract class SFAMove<P, S> extends Move<P, S> {
 	@Override
 	public abstract Object clone();
 
+	@Override
+	public int hashCode() {
+		return Objects.hash(to, from);
+	}
 }
