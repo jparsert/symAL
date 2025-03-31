@@ -14,6 +14,7 @@ import utilities.Pair;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static java.io.IO.print;
 import static java.io.IO.println;
 
 // RPNI
@@ -72,7 +73,6 @@ public class RPNI<P,S> {
             SFA<P,S> mergedA = RPNIMerge(tmpA, qr, qb, algebra);
             if (RPNICompatible(mergedA, negative, algebra)) {
                 mergedA = SFA.removeDeadOrUnreachableStates(mergedA, algebra);
-                mergedA.createDotFile("ASD", "/home/julian/");
                 return Optional.of(new Pair<>(qr, mergedA));
             }
         }
@@ -114,9 +114,7 @@ public class RPNI<P,S> {
         //todo the following assertion is probably wrong in the book
         //assert blueStates.contains(qPrime);
 
-        println("Mege " + q + " " + qPrime);
         A = SFA.removeDeadOrUnreachableStates(A, ba);
-        A.createDotFile("TOMERGE", "/home/julian/");
         Collection<SFAMove<P,S>> moves =  A.getTransitions();
         //assert moves.size() == 1; // this should be unique because 'qPrime is/was blue and is therefore the root of a tree'
         for (SFAMove<P,S> mv : moves) {
@@ -145,21 +143,22 @@ public class RPNI<P,S> {
             assert dAqP.from == qPrime;
 
             if (dAqP instanceof SFAInputMove<P, S> dAqPmv) { // ensure correct type when casting
+                boolean change = false; // flag if it is already defined or not for the symbol. This should 'almost' never ocur for SFAs
                 for(SFAMove<P, S> mvq : A.getTransitionsFrom(q)) {
                     SFAInputMove<P,S> daq = (SFAInputMove<P, S>) mvq;
                     if (daq.guard.equals(dAqPmv.guard)) { // this will rarely occur in SFAs
                         A = RPNIFold(A, daq.to, dAqPmv.to, ba);
-                    } else {
-                        A.bendMoveSource(dAqPmv,q, ba);
+                        change = true;
                     }
                 }
+                if (!change) {
+                    A.bendMoveSource(dAqPmv, q, ba);
+                }
+                workList = A.getTransitionsFrom(qPrime);
+                workList.remove(dAqPmv);
             } else {
                 throw new InvariantViolationException("We should be dealing exclusively with SFAInputMove. But here we have " + dAqP.getClass());
             }
-            println("Fold: " + workList);
-            workList = A.getTransitionsFrom(qPrime);
-            workList.remove(dAqPmv);
-            println("Fold: " + workList);
 
         }
         return A;
