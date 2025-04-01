@@ -14,8 +14,6 @@ import utilities.Pair;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static java.io.IO.print;
-import static java.io.IO.println;
 
 // RPNI
 // Regular Positive and Negative Inference
@@ -28,13 +26,18 @@ public class RPNI<P,S> {
     private final Set<Integer> redStates;
 
 
-    public RPNI() {
+    private RPNI() {
         blueStates = new HashSet<>();
         redStates = new HashSet<>();
     }
 
+    public static <P,S> SFA<P,S> runRPNI(Collection<List<S>> positive, Collection<List<S>> negative, BooleanAlgebra<P, S> algebra)
+            throws DeterminismViolationException, TimeoutException {
+        RPNI<P,S> rpni = new RPNI<P,S>();
+        return rpni.execute(positive, negative, algebra);
+    }
 
-    public SFA<P,S> runRPNI(Collection<List<S>> positive, Collection<List<S>> negative, BooleanAlgebra<P, S> algebra) throws DeterminismViolationException, TimeoutException {
+    private SFA<P,S> execute(Collection<List<S>> positive, Collection<List<S>> negative, BooleanAlgebra<P, S> algebra) throws DeterminismViolationException, TimeoutException {
 
         SFA<P,S> A = SFA.MkPTA(positive, new ArrayList<>(), algebra);
 
@@ -62,7 +65,7 @@ public class RPNI<P,S> {
             } else {
                 RPNIPromote(A, qb);
             }
-            blueStates.remove(qb); // In book this is done right after choose() is called
+            blueStates.remove(qb); // In book this is done right after choose() is called, which might be wrong
         }
         return A;
     }
@@ -110,20 +113,17 @@ public class RPNI<P,S> {
     }
 
     public SFA<P,S> RPNIMerge(SFA<P,S> A, int q, int qPrime, BooleanAlgebra<P, S> ba) throws TimeoutException {
-        //assert redStates.contains(q);
+        assert redStates.contains(q);
         //todo the following assertion is probably wrong in the book
         //assert blueStates.contains(qPrime);
 
         A = SFA.removeDeadOrUnreachableStates(A, ba);
-        Collection<SFAMove<P,S>> moves =  A.getTransitions();
-        //assert moves.size() == 1; // this should be unique because 'qPrime is/was blue and is therefore the root of a tree'
-        for (SFAMove<P,S> mv : moves) {
-            if (mv.to.equals(qPrime)) {
-                A.bendMoveTarget(mv, q, ba);
-                return RPNIFold(A,q,qPrime,ba);
-            }
-        }
-        throw new InvariantViolationException("We could not find a parent node of " + qPrime + " in the moves during RPNI-MERGE! This should not happen!");
+        Collection<SFAMove<P,S>> moves =  A.getTransitionsTo(qPrime);
+        assert moves.size() == 1; // this should be unique because 'qPrime is/was blue and is therefore the root of a tree'
+        SFAMove<P,S> mv = moves.iterator().next();
+        assert mv.to.equals(qPrime); // given that we use getTransitionsTo, this should always be true
+        A.bendMoveTarget(mv, q, ba);
+        return RPNIFold(A,q,qPrime,ba);
     }
 
     public SFA<P,S> RPNIFold(SFA<P,S> A, int q, int qPrime, BooleanAlgebra<P, S> ba) throws TimeoutException {
@@ -135,8 +135,6 @@ public class RPNI<P,S> {
             A.getFinalStates().add(q);
         }
 
-        //todo this is wrong, we need to update the list continuously
-        // todo redesign algorithm
         Collection<SFAMove<P,S>> workList = A.getTransitionsFrom(qPrime);
         while(!workList.isEmpty()) {
             var dAqP = workList.iterator().next();// transition that has q' as parent
