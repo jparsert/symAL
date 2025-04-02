@@ -82,4 +82,15 @@ public class RPNITest {
         res.createDotFile("RPNIEND", "/home/julian/");
     }
 
+
+    @Test
+    public void TestRPNINegEx() throws FileNotFoundException, InvalidConfigurationException, DeterminismViolationException, TimeoutException {
+        PosNegSamples<LRATuple, LRATupleParser> lratuple =  PosNegSamples.readSamplesfromFile("src/test/resources/RatTuples/rpniNegExp.txt", new LRATupleParser());
+        //lratuple.printSamples();
+
+        BooleanAlgebra<BooleanFormula, LRATuple> algebra = new RationalTupleCompAlgebra(2);
+
+        SFA<BooleanFormula,LRATuple> res = RPNI.runRPNI(lratuple.getPositiveSamples(), lratuple.getNegativeSamples(), algebra);
+        res.createDotFile("RPNIEND", "/home/julian/");
+    }
 }
