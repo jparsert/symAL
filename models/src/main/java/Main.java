@@ -32,7 +32,7 @@ public class Main {
         //todo remove fixed dimension
         BooleanAlgebra<BooleanFormula, LRATuple> algebra = new RationalTupleCompAlgebra(2);
 
-        SFA<BooleanFormula,LRATuple> res = RPNI.runRPNI(lratuple.getPositiveSamples(), lratuple.getNegativeSamples(), algebra);
+        SFA<BooleanFormula,LRATuple> res = RPNI.run(lratuple.getPositiveSamples(), lratuple.getNegativeSamples(), algebra);
 
         if (cmdline.hasOption("o")) {
             Path p = Paths.get(cmdline.getOptionValue("o"));

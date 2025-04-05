@@ -31,7 +31,7 @@ public class RPNI<P,S> {
         redStates = new HashSet<>();
     }
 
-    public static <P,S> SFA<P,S> runRPNI(Collection<List<S>> positive, Collection<List<S>> negative, BooleanAlgebra<P, S> algebra)
+    public static <P,S> SFA<P,S> run(Collection<List<S>> positive, Collection<List<S>> negative, BooleanAlgebra<P, S> algebra)
             throws DeterminismViolationException, TimeoutException {
         RPNI<P,S> rpni = new RPNI<P,S>();
         return rpni.execute(positive, negative, algebra);
@@ -40,8 +40,6 @@ public class RPNI<P,S> {
     private SFA<P,S> execute(Collection<List<S>> positive, Collection<List<S>> negative, BooleanAlgebra<P, S> algebra) throws DeterminismViolationException, TimeoutException {
 
         SFA<P,S> A = SFA.MkPTA(positive, new ArrayList<>(), algebra);
-
-        //A.createDotFile("B", "/home/julian/");
 
         redStates.add(A.getInitialState());
         // The book is lacking a definition for PREF(S+). The book initialises the blue states with the states reached by

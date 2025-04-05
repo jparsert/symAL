@@ -39,7 +39,7 @@ public class RPNITest {
                 BooleanAlgebra<BooleanFormula, LRATuple> algebra = new RationalTupleCompAlgebra(2);
 
 
-                SFA<BooleanFormula,LRATuple> res = RPNI.runRPNI(lratuple.getPositiveSamples(), lratuple.getNegativeSamples(), algebra);
+                SFA<BooleanFormula,LRATuple> res = RPNI.run(lratuple.getPositiveSamples(), lratuple.getNegativeSamples(), algebra);
                 res.createDotFile("ASD", "/home/julian/");
 
                 for (List<LRATuple> e : lratuple.getPositiveSamples()) {
@@ -78,7 +78,7 @@ public class RPNITest {
 
         BooleanAlgebra<BooleanFormula, LRATuple> algebra = new RationalTupleCompAlgebra(2);
 
-        SFA<BooleanFormula,LRATuple> res = RPNI.runRPNI(lratuple.getPositiveSamples(), lratuple.getNegativeSamples(), algebra);
+        SFA<BooleanFormula,LRATuple> res = RPNI.run(lratuple.getPositiveSamples(), lratuple.getNegativeSamples(), algebra);
         res.createDotFile("RPNIEND", "/home/julian/");
     }
 
@@ -90,7 +90,7 @@ public class RPNITest {
 
         BooleanAlgebra<BooleanFormula, LRATuple> algebra = new RationalTupleCompAlgebra(2);
 
-        SFA<BooleanFormula,LRATuple> res = RPNI.runRPNI(lratuple.getPositiveSamples(), lratuple.getNegativeSamples(), algebra);
+        SFA<BooleanFormula,LRATuple> res = RPNI.run(lratuple.getPositiveSamples(), lratuple.getNegativeSamples(), algebra);
         res.createDotFile("RPNIEND", "/home/julian/");
     }
 }

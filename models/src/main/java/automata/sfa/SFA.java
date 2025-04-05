@@ -228,7 +228,7 @@ public class SFA<P, S> extends Automaton<P, S> {
 
 
 	//
-	private Pair<Collection<Integer>, List<S>> consumeLongestPrefix(List<S> word, BooleanAlgebra<P,S> algebra) throws TimeoutException {
+	public Pair<Collection<Integer>, List<S>> consumeLongestPrefix(List<S> word, BooleanAlgebra<P,S> algebra) throws TimeoutException {
 		Collection<Integer> currConf = getEpsClosure(getInitialState(), algebra);
 		Collection<Integer> nextConf;
 
