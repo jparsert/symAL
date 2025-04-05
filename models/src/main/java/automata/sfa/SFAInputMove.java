@@ -68,6 +68,11 @@ public class SFAInputMove<P,S> extends SFAMove<P, S>{
 	}
 
 	@Override
+	public int hashCode() {
+		return Objects.hash(to, from, guard.hashCode());
+	}
+
+	@Override
 	public Object clone(){
 		  return new SFAInputMove<P, S>(from,to, guard);
 	}
