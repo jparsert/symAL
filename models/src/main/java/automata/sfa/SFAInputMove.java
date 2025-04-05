@@ -20,7 +20,7 @@ import java.util.Objects;
 public class SFAInputMove<P,S> extends SFAMove<P, S>{
 
 	public P guard;
-	
+
 	/**
 	 * Constructs an FSA Transition that starts from state <code>from</code> and ends at state
 	 * <code>to</code> with input <code>input</code>
@@ -29,18 +29,18 @@ public class SFAInputMove<P,S> extends SFAMove<P, S>{
 		super(from, to);
 		this.guard=guard;
 	}
-	
+
 	@Override
 	public boolean isSatisfiable(BooleanAlgebra<P,S> boolal) throws TimeoutException{
 		return boolal.IsSatisfiable(guard);
 	}
-	
+
 	@Override
 	public boolean isDisjointFrom(SFAMove<P,S> t, BooleanAlgebra<P,S> ba) throws TimeoutException{
 		if(t.isEpsilonTransition())
 			return true;
-		if (from.equals(t.from)){			
-			SFAInputMove<P, S> ct = (SFAInputMove<P, S>) t;			
+		if (from.equals(t.from)){
+			SFAInputMove<P, S> ct = (SFAInputMove<P, S>) t;
 			if(ba.IsSatisfiable(ba.MkAnd(guard,ct.guard)))
 				return false;
 		}
@@ -74,7 +74,7 @@ public class SFAInputMove<P,S> extends SFAMove<P, S>{
 
 	@Override
 	public Object clone(){
-		  return new SFAInputMove<P, S>(from,to, guard);
+		return new SFAInputMove<P, S>(from,to, guard);
 	}
 
 	@Override
@@ -92,8 +92,4 @@ public class SFAInputMove<P,S> extends SFAMove<P, S>{
 		return ba.HasModel(guard, el);
 	}
 
-	@Override
-	public int hashCode() {
-		return Objects.hash(to, from, guard.hashCode());
-	}
 }
