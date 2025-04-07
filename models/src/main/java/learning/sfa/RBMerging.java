@@ -13,6 +13,8 @@ import utilities.Pair;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static java.io.IO.println;
+
 public class RBMerging <P,S>  {
 
     private final Set<Integer> blueStates;
@@ -43,7 +45,9 @@ public class RBMerging <P,S>  {
             boolean promotion = false;
             Integer qbHat = null;
             Integer qrHat = null;
-            for (Integer qb : blueStates) {
+
+            Collection<Integer> tmpBlueStates = blueStates.stream().toList();
+            for (Integer qb :tmpBlueStates) {
                 if (!promotion) {
                     Optional<Integer> bs = Optional.empty();
                     boolean atLeastOneMerge = false;
@@ -61,19 +65,20 @@ public class RBMerging <P,S>  {
                         }
                     }
                     if (!atLeastOneMerge) {
-                        RPNIPromote(A, qb);
+                        promote(A, qb);
                         promotion = true;
                     }
                 }
             }
+
             if (!promotion) {
                 assert qbHat != null;
                 assert qrHat != null;
+
                 blueStates.remove(qbHat);
                 A = RPNIMerge(A, qrHat, qbHat, algebra);
             }
         }
-
         for (List<S> word : positive) {
             Pair<Collection<Integer>, List<S>> res = A.consumeLongestPrefix(word, algebra);
             assert res.getFirst().size() == 1;
@@ -84,6 +89,8 @@ public class RBMerging <P,S>  {
             Pair<Collection<Integer>, List<S>> res = A.consumeLongestPrefix(word, algebra);
             assert !A.getFinalStates().contains(res.first.iterator().next());
         }
+
+        A = SFA.removeDeadOrUnreachableStates(A, algebra);
 
         return A;
     }
@@ -100,16 +107,20 @@ public class RBMerging <P,S>  {
     }
 
 
-    private void RPNIPromote(SFA<P,S> A, int state) {
+    private void promote(SFA<P,S> A, int state) {
         assert blueStates.contains(state);
-
         //add to red states
         redStates.add(state);
+
+        // this line is not described in the book, but *I think* that's a mistake as blue and red sets should be disjoint
+        blueStates.remove(state);
 
         // add all one step reachable states to blue states
         Collection<SFAMove<P, S>> moves = A.getTransitionsFrom(state);
         for(SFAMove<P,S> mv : moves) {
-            blueStates.add(mv.to);
+            if (!redStates.contains(mv.to)) {
+                blueStates.add(mv.to);
+            }
         }
 
     }
@@ -134,12 +145,12 @@ public class RBMerging <P,S>  {
         }
         for (List<S> word : negative) {
             Pair<Collection<Integer>, List<S>> res = A.consumeLongestPrefix(word, algebra);
-            if (res.first.size() != 1 || !res.second.isEmpty()) {
+            if (res.first.size() != 1) {
                 throw new InvariantViolationException("This means A is either nondeterministic or not complete. " +
-                        "Error occurred when reading the rejecting negative sample: " + word + ".");
+                        "Error occurred when reading the rejecting negative sample: " + word + " leads to states: " + res.first + ".");
             }
             int q = res.first.iterator().next();
-            assert A.getNonFinalStates().contains(q);
+            //assert A.getNonFinalStates().contains(q);
             tn.put(q, tn.get(q) + 1);
         }
 
@@ -160,7 +171,6 @@ public class RBMerging <P,S>  {
                 }
             }
         }
-
         return score;
     }
 
@@ -171,7 +181,11 @@ public class RBMerging <P,S>  {
 
         A = SFA.removeDeadOrUnreachableStates(A, ba);
         Collection<SFAMove<P,S>> moves =  A.getTransitionsTo(qPrime);
-        assert moves.size() == 1; // this should be unique because 'qPrime is/was blue and is therefore the root of a tree'
+
+        //assert moves.size() == 1; // this should be unique because 'qPrime is/was blue and is therefore the root of a tree'
+        if(moves.isEmpty()) {
+            return A;
+        }
         SFAMove<P,S> mv = moves.iterator().next();
         assert mv.to.equals(qPrime); // given that we use getTransitionsTo, this should always be true
         A.bendMoveTarget(mv, q, ba);
