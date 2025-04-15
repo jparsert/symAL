@@ -9,10 +9,18 @@ import scala.Int;
 import theory.BooleanAlgebra;
 import theory.LRATuples.LRATuple;
 import theory.LRATuples.RationalTupleCompAlgebra;
+import theory.intervals.IntPred;
+import theory.intervals.IntegerSolver;
 import utilities.*;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 
 import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -42,8 +50,35 @@ public class Main {
         }
     }
 
+    private static void integerComparisonAlgebra(CommandLine cmdline) throws IOException, InvalidConfigurationException, DeterminismViolationException, TimeoutException {
+        if (!cmdline.getOptionValue("i").endsWith(".json")) {
+            throw new IllegalArgumentException("Expected Json file as input!");
+        }
 
-    public static void main(String[] args) throws TimeoutException, InvalidConfigurationException, FileNotFoundException, DeterminismViolationException, ParseException {
+        String inputFile = cmdline.getOptionValue("i");
+
+        // Read the file into a String
+        String content = new String(Files.readAllBytes(Paths.get(inputFile)));
+        JSONObject json = new JSONObject(content);
+
+        JSONArray positiveSamples = json.getJSONArray("pos");
+        JSONArray negativeSamples = json.getJSONArray("neg");
+
+        //todo all of this
+        BooleanAlgebra<IntPred, Integer> algebra = new IntegerSolver();
+
+        SFA<BooleanFormula,LRATuple> res = null; //= RPNI.run(lratuple.getPositiveSamples(), lratuple.getNegativeSamples(), algebra);
+
+        if (cmdline.hasOption("o")) {
+            Path p = Paths.get(cmdline.getOptionValue("o"));
+            res.createDotFile(p.getFileName().toString(), p.getParent().toString());
+        } else {
+            println(res.toString());
+        }
+
+    }
+
+    public static void main(String[] args) throws TimeoutException, InvalidConfigurationException, IOException, DeterminismViolationException, ParseException {
 
         Option theory = Option.builder("theory")
                 .hasArg()
@@ -69,6 +104,7 @@ public class Main {
 
         switch (commandLine.getOptionValue("theory")) {
             case "RatTupComp" -> ratTupleComparisonAlgebra(commandLine);
+            case "IntComparison" -> integerComparisonAlgebra(commandLine);
         }
 
     }
