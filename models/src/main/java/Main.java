@@ -1,40 +1,37 @@
-import ap.util.CmdlParser;
 import automata.sfa.SFA;
+import learning.sfa.RBMerging;
 import learning.sfa.RPNI;
 import org.sat4j.specs.TimeoutException;
 import org.sosy_lab.common.configuration.InvalidConfigurationException;
-import org.sosy_lab.common.rationals.Rational;
 import org.sosy_lab.java_smt.api.BooleanFormula;
-import scala.Int;
 import theory.BooleanAlgebra;
 import theory.LRATuples.LRATuple;
 import theory.LRATuples.RationalTupleCompAlgebra;
+import theory.characters.CharFunc;
+import theory.characters.CharPred;
 import theory.intervals.IntPred;
 import theory.intervals.IntegerSolver;
+import theory.intervals.UnaryCharIntervalSolver;
 import utilities.*;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
 
-
+import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
 
-import static automata.sfa.SFA.MkPTA;
 import static java.io.IO.println;
 
 import org.apache.commons.cli.*;
+import utilities.exceptions.DeterminismViolationException;
+import utilities.parsing.LRATupleParser;
+import utilities.parsing.StringToUnicodeWordParser;
 
 public class Main {
 
     private static void ratTupleComparisonAlgebra(CommandLine cmdline) throws FileNotFoundException, InvalidConfigurationException, DeterminismViolationException, TimeoutException {
-        PosNegSamples<LRATuple, LRATupleParser> lratuple =  PosNegSamples.readSamplesfromFile(cmdline.getOptionValue("i"), new LRATupleParser());
+        PosNegSamples<LRATuple> lratuple =  PosNegSamples.readSamplesfromFile(cmdline.getOptionValue("i"), new LRATupleParser());
         //lratuple.printSamples();
 
         //todo remove fixed dimension
@@ -50,28 +47,21 @@ public class Main {
         }
     }
 
-    private static void integerComparisonAlgebra(CommandLine cmdline) throws IOException, InvalidConfigurationException, DeterminismViolationException, TimeoutException {
+    private static void integerComparisonAlgebra(CommandLine cmdline) throws IOException, DeterminismViolationException, TimeoutException {
         if (!cmdline.getOptionValue("i").endsWith(".json")) {
             throw new IllegalArgumentException("Expected Json file as input!");
         }
+        PosNegSamples<Character> samples =  PosNegSamples.readSamplesFromJsonFile(cmdline.getOptionValue("i"), new StringToUnicodeWordParser());
 
-        String inputFile = cmdline.getOptionValue("i");
-
-        // Read the file into a String
-        String content = new String(Files.readAllBytes(Paths.get(inputFile)));
-        JSONObject json = new JSONObject(content);
-
-        JSONArray positiveSamples = json.getJSONArray("pos");
-        JSONArray negativeSamples = json.getJSONArray("neg");
 
         //todo all of this
-        BooleanAlgebra<IntPred, Integer> algebra = new IntegerSolver();
+        BooleanAlgebra<CharPred, Character> algebra = new UnaryCharIntervalSolver();
 
-        SFA<BooleanFormula,LRATuple> res = null; //= RPNI.run(lratuple.getPositiveSamples(), lratuple.getNegativeSamples(), algebra);
+        SFA<CharPred,Character> res = RBMerging.run(samples.getPositiveSamples(), samples.getNegativeSamples(), algebra);
 
         if (cmdline.hasOption("o")) {
             Path p = Paths.get(cmdline.getOptionValue("o"));
-            res.createDotFile(p.getFileName().toString(), p.getParent().toString());
+            res.createDotFile(p.getFileName().toString(), p.getParent().toString() + File.separator);
         } else {
             println(res.toString());
         }
@@ -104,7 +94,7 @@ public class Main {
 
         switch (commandLine.getOptionValue("theory")) {
             case "RatTupComp" -> ratTupleComparisonAlgebra(commandLine);
-            case "IntComparison" -> integerComparisonAlgebra(commandLine);
+            case "CharComparison" -> integerComparisonAlgebra(commandLine);
         }
 
     }

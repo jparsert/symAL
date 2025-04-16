@@ -65,7 +65,7 @@ public abstract class Automaton<P, S> {
 
 				fw.write("]\n");
 				if (isInitialState(state))
-					fw.write("XX" + state + " [color=white, label=\"\"]");
+					fw.write("XX" + state + " [color=white, label=\"\"]\n");
 			}
 
 			fw.write("XX" + getInitialState() + " -> " + getInitialState() + "\n");

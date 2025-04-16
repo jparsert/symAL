@@ -9,8 +9,8 @@ import org.sosy_lab.java_smt.api.BooleanFormula;
 import theory.BooleanAlgebra;
 import theory.LRATuples.LRATuple;
 import theory.LRATuples.RationalTupleCompAlgebra;
-import utilities.DeterminismViolationException;
-import utilities.LRATupleParser;
+import utilities.exceptions.DeterminismViolationException;
+import utilities.parsing.LRATupleParser;
 import utilities.PosNegSamples;
 
 import java.io.File;
@@ -31,7 +31,7 @@ public class RBMergerTest {
         assert listOfFiles != null;
         for (File file : listOfFiles) {
             if (file.isFile() && file.getName().endsWith(".txt")) {
-                PosNegSamples<LRATuple, LRATupleParser> lratuple =  PosNegSamples.readSamplesfromFile(file.getPath(), new LRATupleParser());
+                PosNegSamples<LRATuple> lratuple =  PosNegSamples.readSamplesfromFile(file.getPath(), new LRATupleParser());
 
                 BooleanAlgebra<BooleanFormula, LRATuple> algebra = new RationalTupleCompAlgebra(2);
 
@@ -46,6 +46,13 @@ public class RBMergerTest {
                 for (List<LRATuple> e : lratuple.getNegativeSamples()) {
                     assertFalse(format("The following sample should NOT be accepted but is accepted: %s", e), res.accepts(e, algebra));
                 }
+
+                res.createDotFile("ASD", "/home/julian/");
+
+                //res.createDotFile(file.getName().substring(0, file.getName().length() - 4), "/home/julian/");
+                //SFA<BooleanFormula, LRATuple> a = SFA.MkPTA(lratuple.getPositiveSamples(), lratuple.getNegativeSamples(), algebra);
+                //a.createDotFile(file.getName().substring(0, file.getName().length() - 4)+"_PTA", "/home/julian/");
+
             }
         }
     }

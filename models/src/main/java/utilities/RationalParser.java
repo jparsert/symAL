@@ -1,6 +1,7 @@
 package utilities;
 
 import org.sosy_lab.common.rationals.Rational;
+import utilities.parsing.ElementParser;
 
 import java.io.IOException;
 

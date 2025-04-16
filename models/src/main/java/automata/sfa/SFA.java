@@ -16,10 +16,9 @@ import automata.safa.BooleanExpressionFactory;
 import automata.safa.SAFA;
 import automata.safa.SAFAInputMove;
 import automata.safa.booleanexpression.PositiveBooleanExpression;
-import org.sosy_lab.common.rationals.Rational;
 import theory.BooleanAlgebra;
-import theory.LRATuples.RationalTupleCompAlgebra;
 import utilities.*;
+import utilities.exceptions.DeterminismViolationException;
 
 import static java.io.IO.println;
 

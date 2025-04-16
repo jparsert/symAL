@@ -1,7 +1,8 @@
-package utilities;
+package utilities.parsing;
 
 import org.sosy_lab.common.rationals.Rational;
 import theory.LRATuples.LRATuple;
+import utilities.RationalParser;
 
 import java.io.IOException;
 import java.util.ArrayList;

@@ -1,13 +1,12 @@
 package learning.sfa;
 
-import ap.util.CmdlParser;
 import automata.sfa.SFA;
 import automata.sfa.SFAInputMove;
 import automata.sfa.SFAMove;
 import org.sat4j.specs.TimeoutException;
 import theory.BooleanAlgebra;
-import utilities.DeterminismViolationException;
-import utilities.InvariantViolationException;
+import utilities.exceptions.DeterminismViolationException;
+import utilities.exceptions.InvariantViolationException;
 import utilities.Pair;
 
 import java.util.*;
