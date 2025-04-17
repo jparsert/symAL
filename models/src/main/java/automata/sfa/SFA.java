@@ -20,8 +20,6 @@ import theory.BooleanAlgebra;
 import utilities.*;
 import utilities.exceptions.DeterminismViolationException;
 
-import static java.io.IO.println;
-
 /**
  * Symbolic finite automaton
  * 

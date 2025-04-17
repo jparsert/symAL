@@ -9,7 +9,6 @@ import learning.sfa.RPNI;
 import org.junit.Test;
 import org.sat4j.specs.TimeoutException;
 
-import static java.io.IO.println;
 import static java.lang.String.format;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;

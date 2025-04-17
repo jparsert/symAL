@@ -20,8 +20,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import static java.io.IO.println;
-
 
 public class RationalTupleCompAlgebra extends BooleanAlgebra<BooleanFormula, LRATuple> {
 

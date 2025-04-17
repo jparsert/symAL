@@ -21,8 +21,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import static java.io.IO.println;
-
 import org.apache.commons.cli.*;
 import utilities.exceptions.DeterminismViolationException;
 import utilities.parsing.LRATupleParser;
@@ -43,7 +41,7 @@ public class Main {
             Path p = Paths.get(cmdline.getOptionValue("o"));
             res.createDotFile(p.getFileName().toString(), p.getParent().toString());
         } else {
-            println(res.toString());
+            System.out.println(res.toString());
         }
     }
 
@@ -63,12 +61,12 @@ public class Main {
             Path p = Paths.get(cmdline.getOptionValue("o"));
             res.createDotFile(p.getFileName().toString(), p.getParent().toString() + File.separator);
         } else {
-            println(res.toString());
+            System.out.println(res.toString());
         }
 
     }
 
-    public static void main(String[] args) throws TimeoutException, InvalidConfigurationException, IOException, DeterminismViolationException, ParseException {
+    public static void main(String[] args) throws TimeoutException, InvalidConfigurationException, IOException, DeterminismViolationException {
 
         Option theory = Option.builder("theory")
                 .hasArg()
@@ -90,7 +88,14 @@ public class Main {
         options.addOption(inputFile);
         options.addOption(output);
         CommandLineParser parser = new DefaultParser();
-        CommandLine commandLine = parser.parse(options, args);
+        CommandLine commandLine = null;
+        try {
+            commandLine = parser.parse(options, args);
+        } catch (ParseException e) {
+            HelpFormatter formatter = new HelpFormatter();
+            formatter.printHelp("help", options );
+            System.exit(0);
+        }
 
         switch (commandLine.getOptionValue("theory")) {
             case "RatTupComp" -> ratTupleComparisonAlgebra(commandLine);
