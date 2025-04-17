@@ -46,7 +46,7 @@ public class Main {
     }
 
     private static void integerComparisonAlgebra(CommandLine cmdline) throws IOException, DeterminismViolationException, TimeoutException {
-        if (!cmdline.getOptionValue("i").endsWith(".json")) {
+        if (!cmdline.getOptionValue("i").endsWith(".json") && !cmdline.getOptionValue("format").equals("json")) {
             throw new IllegalArgumentException("Expected Json file as input!");
         }
         PosNegSamples<Character> samples =  PosNegSamples.readSamplesFromJsonFile(cmdline.getOptionValue("i"), new StringToUnicodeWordParser());
@@ -79,6 +79,11 @@ public class Main {
                 .build();
         Option output = Option.builder("o")
                 .longOpt("output")
+                .hasArg()
+                .required(false)
+                .build();
+
+        Option format = Option.builder("format")
                 .hasArg()
                 .required(false)
                 .build();
