@@ -62,7 +62,6 @@ public class Main {
         BooleanAlgebra<CharPred, Character> algebra = new UnaryCharIntervalSolver();
 
         SFA<CharPred,Character> res = RBMerging.run(samples.getPositiveSamples(), samples.getNegativeSamples(), algebra);
-
         if (cmdline.hasOption("o")) {
             Path p = Paths.get(cmdline.getOptionValue("o"));
             res.createDotFile(p.getFileName().toString(), p.getParent().toString() + File.separator);
@@ -88,7 +87,6 @@ public class Main {
                 .hasArg()
                 .required(false)
                 .build();
-
         Option format = Option.builder("format")
                 .hasArg()
                 .required(false)
@@ -98,6 +96,7 @@ public class Main {
         options.addOption(theory);
         options.addOption(inputFile);
         options.addOption(output);
+        options.addOption(format);
         CommandLineParser parser = new DefaultParser();
         CommandLine commandLine = null;
         try {

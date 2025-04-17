@@ -12,7 +12,6 @@ import utilities.Pair;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static java.io.IO.println;
 
 public class RBMerging <P,S>  {
 
