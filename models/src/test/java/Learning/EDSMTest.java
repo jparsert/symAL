@@ -1,7 +1,7 @@
 package Learning;
 
 import automata.sfa.SFA;
-import learning.sfa.RBMerging;
+import learning.sfa.EDSM;
 import org.junit.Test;
 import org.sat4j.specs.TimeoutException;
 import org.sosy_lab.common.configuration.InvalidConfigurationException;
@@ -21,7 +21,7 @@ import static java.lang.String.format;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-public class RBMergerTest {
+public class EDSMTest {
 
     @Test
     public void RBMergerAllRatTuplesInResources() throws FileNotFoundException, InvalidConfigurationException, DeterminismViolationException, TimeoutException {
@@ -36,8 +36,7 @@ public class RBMergerTest {
                 BooleanAlgebra<BooleanFormula, LRATuple> algebra = new RationalTupleCompAlgebra(2);
 
 
-                SFA<BooleanFormula,LRATuple> res = RBMerging.run(lratuple.getPositiveSamples(), lratuple.getNegativeSamples(), algebra);
-                res.createDotFile("ASD", "/home/julian/");
+                SFA<BooleanFormula,LRATuple> res = EDSM.run(lratuple.getPositiveSamples(), lratuple.getNegativeSamples(), algebra);
 
                 for (List<LRATuple> e : lratuple.getPositiveSamples()) {
                     assertTrue(format("The following sample should be accepted but is rejected: %s", e), res.accepts(e, algebra));

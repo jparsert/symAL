@@ -13,13 +13,13 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 
-public class RBMerging <P,S>  {
+public class EDSM<P,S>  {
 
     private final Set<Integer> blueStates;
     private final Set<Integer> redStates;
 
 
-    private RBMerging() {
+    private EDSM() {
         blueStates = new HashSet<>();
         redStates = new HashSet<>();
     }
@@ -27,7 +27,7 @@ public class RBMerging <P,S>  {
     public static <P,S> SFA<P,S> run(Collection<List<S>> positive, Collection<List<S>> negative, BooleanAlgebra<P, S> algebra)
             throws DeterminismViolationException, TimeoutException {
 
-        RBMerging<P,S> syntesiser = new RBMerging<P,S>();
+        EDSM<P,S> syntesiser = new EDSM<P,S>();
         return syntesiser.execute(positive, negative, algebra);
     }
 
@@ -51,7 +51,7 @@ public class RBMerging <P,S>  {
                     boolean atLeastOneMerge = false;
                     for (Integer qr : redStates) {
                         SFA<P,S> tmpA = (SFA<P, S>) A.clone();
-                        tmpA = RPNIMerge(tmpA, qr, qb, algebra);
+                        tmpA = EDSMMerge(tmpA, qr, qb, algebra);
                         Optional<Integer> s = EDSMCount(tmpA, positive, negative, algebra);
                         if (extendedGT(s, Optional.empty())) {
                             atLeastOneMerge = true;
@@ -74,7 +74,7 @@ public class RBMerging <P,S>  {
                 assert qrHat != null;
 
                 blueStates.remove(qbHat);
-                A = RPNIMerge(A, qrHat, qbHat, algebra);
+                A = EDSMMerge(A, qrHat, qbHat, algebra);
             }
         }
         for (List<S> word : positive) {
@@ -172,7 +172,7 @@ public class RBMerging <P,S>  {
         return score;
     }
 
-    private SFA<P,S> RPNIMerge(SFA<P,S> A, int q, int qPrime, BooleanAlgebra<P, S> ba) throws TimeoutException {
+    private SFA<P,S> EDSMMerge(SFA<P,S> A, int q, int qPrime, BooleanAlgebra<P, S> ba) throws TimeoutException {
         assert redStates.contains(q);
         //todo the following assertion is probably wrong in the book
         //assert blueStates.contains(qPrime);
@@ -187,10 +187,10 @@ public class RBMerging <P,S>  {
         SFAMove<P,S> mv = moves.iterator().next();
         assert mv.to.equals(qPrime); // given that we use getTransitionsTo, this should always be true
         A.bendMoveTarget(mv, q, ba);
-        return RPNIFold(A,q,qPrime,ba);
+        return EDSMFold(A,q,qPrime,ba);
     }
 
-    private SFA<P,S> RPNIFold(SFA<P,S> A, int q, int qPrime, BooleanAlgebra<P, S> ba) throws TimeoutException {
+    private SFA<P,S> EDSMFold(SFA<P,S> A, int q, int qPrime, BooleanAlgebra<P, S> ba) throws TimeoutException {
         assert A.getStates().contains(q);
         assert A.getStates().contains(qPrime);
         // qPrime should be the root of a tree
@@ -209,15 +209,14 @@ public class RBMerging <P,S>  {
                 for(SFAMove<P, S> mvq : A.getTransitionsFrom(q)) {
                     SFAInputMove<P,S> daq = (SFAInputMove<P, S>) mvq;
                     if (daq.guard.equals(dAqPmv.guard)) { // this will rarely occur in SFAs
-                        A = RPNIFold(A, daq.to, dAqPmv.to, ba);
+                        A = EDSMFold(A, daq.to, dAqPmv.to, ba);
                         change = true;
                     }
                 }
                 if (!change) {
                     A.bendMoveSource(dAqPmv, q, ba);
                 }
-                workList = A.getTransitionsFrom(qPrime);
-                workList.remove(dAqPmv);
+                workList.remove(dAqP);
             } else {
                 throw new InvariantViolationException("We should be dealing exclusively with SFAInputMove. But here we have " + dAqP.getClass());
             }

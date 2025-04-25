@@ -39,7 +39,6 @@ public class RPNITest {
 
 
                 SFA<BooleanFormula,LRATuple> res = RPNI.run(lratuple.getPositiveSamples(), lratuple.getNegativeSamples(), algebra);
-                res.createDotFile("ASD", "/home/julian/");
 
                 for (List<LRATuple> e : lratuple.getPositiveSamples()) {
                     assertTrue(format("The following sample should be accepted but is rejected: %s", e), res.accepts(e, algebra));

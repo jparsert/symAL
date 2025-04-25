@@ -1,5 +1,5 @@
 import automata.sfa.SFA;
-import learning.sfa.RBMerging;
+import learning.sfa.EDSM;
 import learning.sfa.RPNI;
 import org.sat4j.specs.TimeoutException;
 import org.sosy_lab.common.configuration.InvalidConfigurationException;
@@ -7,10 +7,7 @@ import org.sosy_lab.java_smt.api.BooleanFormula;
 import theory.BooleanAlgebra;
 import theory.LRATuples.LRATuple;
 import theory.LRATuples.RationalTupleCompAlgebra;
-import theory.characters.CharFunc;
 import theory.characters.CharPred;
-import theory.intervals.IntPred;
-import theory.intervals.IntegerSolver;
 import theory.intervals.UnaryCharIntervalSolver;
 import utilities.*;
 
@@ -61,7 +58,8 @@ public class Main {
         //todo all of this
         BooleanAlgebra<CharPred, Character> algebra = new UnaryCharIntervalSolver();
 
-        SFA<CharPred,Character> res = RBMerging.run(samples.getPositiveSamples(), samples.getNegativeSamples(), algebra);
+        SFA<CharPred,Character> res = EDSM.run(samples.getPositiveSamples(), samples.getNegativeSamples(), algebra);
+
         if (cmdline.hasOption("o")) {
             Path p = Paths.get(cmdline.getOptionValue("o"));
             res.createDotFile(p.getFileName().toString(), p.getParent().toString() + File.separator);

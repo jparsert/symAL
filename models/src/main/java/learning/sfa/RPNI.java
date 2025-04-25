@@ -150,8 +150,7 @@ public class RPNI<P,S> {
                 if (!change) {
                     A.bendMoveSource(dAqPmv, q, ba);
                 }
-                workList = A.getTransitionsFrom(qPrime);
-                workList.remove(dAqPmv);
+                workList.remove(dAqP);
             } else {
                 throw new InvariantViolationException("We should be dealing exclusively with SFAInputMove. But here we have " + dAqP.getClass());
             }
