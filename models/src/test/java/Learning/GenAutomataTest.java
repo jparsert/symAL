@@ -2,6 +2,7 @@ package Learning;
 
 import automata.sfa.SFA;
 import learning.sfa.EDSM;
+import learning.sfa.GenAutomata;
 import org.junit.Test;
 import org.sat4j.specs.TimeoutException;
 import org.sosy_lab.common.configuration.InvalidConfigurationException;
@@ -27,18 +28,22 @@ public class GenAutomataTest {
     public void GeneralisePredicatesTest() throws IOException, InvalidConfigurationException, DeterminismViolationException, TimeoutException {
 
         //lratuple.printSamples();
-        PosNegSamples<Character> samples =  PosNegSamples.readSamplesFromJsonFile("src/test/resources/killerExample.txt", new StringToUnicodeWordParser());
+        PosNegSamples<Character> samples =  PosNegSamples.readSamplesFromJsonFile("src/test/resources/characterSamples.txt", new StringToUnicodeWordParser());
 
         BooleanAlgebra<CharPred, Character> algebra = new UnaryCharIntervalSolver();
         SFA<CharPred,Character> res = EDSM.run(samples.getPositiveSamples(), samples.getNegativeSamples(), algebra);
 
-        res.createDotFile("RES", "/home/julian/");
+        //res.createDotFile("RES", "/home/julian/");
+
+        res = GenAutomata.generaliseTransitions(res, algebra);
+
+        //res.createDotFile("RES1", "/home/julian/");
 
         for (List<Character> e : samples.getPositiveSamples()) {
             assertTrue(format("The following sample should be accepted but is rejected: %s", e.toString()), res.accepts(e, algebra));
         }
         for (List<Character> e : samples.getNegativeSamples()) {
-            assertFalse(res.accepts(e, algebra));
+            assertFalse(format("The following sample should be rejected but is accepted: %s", e.toString()), res.accepts(e, algebra));
         }
     }
 }
