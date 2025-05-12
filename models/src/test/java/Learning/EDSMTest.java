@@ -46,7 +46,7 @@ public class EDSMTest {
                     assertFalse(format("The following sample should NOT be accepted but is accepted: %s", e), res.accepts(e, algebra));
                 }
 
-                res.createDotFile("ASD", "/home/julian/");
+                //res.createDotFile("ASD", "/home/julian/");
 
                 //res.createDotFile(file.getName().substring(0, file.getName().length() - 4), "/home/julian/");
                 //SFA<BooleanFormula, LRATuple> a = SFA.MkPTA(lratuple.getPositiveSamples(), lratuple.getNegativeSamples(), algebra);
