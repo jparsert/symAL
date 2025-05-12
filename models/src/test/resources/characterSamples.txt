@@ -1,0 +1,4 @@
+{
+"pos": ["a", "b", "aaaaaaaaa"],
+"neg": ["A", "B","C", "aaa"]
+}
