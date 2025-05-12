@@ -331,7 +331,7 @@ public class SFA<P, S> extends Automaton<P, S> {
 	}
 	
 	// Adds a transition to the SFA
-	private void addTransition(SFAMove<P, S> transition, BooleanAlgebra<P, S> ba, boolean skipSatCheck) throws TimeoutException {
+	public void addTransition(SFAMove<P, S> transition, BooleanAlgebra<P, S> ba, boolean skipSatCheck) throws TimeoutException {
 
 		if (transition.isEpsilonTransition()) {
 			if (Objects.equals(transition.to, transition.from))
@@ -363,8 +363,7 @@ public class SFA<P, S> extends Automaton<P, S> {
 		}
 	}
 
-	private void removeTransition(SFAMove<P, S> transition) {
-
+	public void removeTransition(SFAMove<P, S> transition) {
 
 		switch (transition) {
 			case SFAEpsilon<P,S> tran -> {

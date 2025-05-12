@@ -24,7 +24,7 @@ import static org.junit.Assert.assertTrue;
 public class EDSMTest {
 
     @Test
-    public void RBMergerAllRatTuplesInResources() throws FileNotFoundException, InvalidConfigurationException, DeterminismViolationException, TimeoutException {
+    public void EDSMAllRatTuplesInResources() throws FileNotFoundException, InvalidConfigurationException, DeterminismViolationException, TimeoutException {
         File folder = new File("src/test/resources/RatTuples");
         File[] listOfFiles = folder.listFiles();
 
