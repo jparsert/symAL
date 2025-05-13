@@ -24,12 +24,15 @@ public class UnaryCharIntervallLearningTest {
     public void FirstTest() throws IOException, DeterminismViolationException, TimeoutException {
 
         //lratuple.printSamples();
-        PosNegSamples<Character> samples =  PosNegSamples.readSamplesFromJsonFile("src/test/resources/characterSamples.txt", new StringToUnicodeWordParser());
+        PosNegSamples<Character> samples =  PosNegSamples.readSamplesFromJsonFile("src/test/resources/IntervallProblems/characterSamples.json", new StringToUnicodeWordParser());
 
         BooleanAlgebra<CharPred, Character> algebra = new UnaryCharIntervalSolver();
         SFA<CharPred,Character> res = EDSM.run(samples.getPositiveSamples(), samples.getNegativeSamples(), algebra);
 
-        //res.createDotFile("ASD", "/home/julian/");
+        res = res.mkTotal(algebra);
+
+        res.createDotFile("ASD", "/home/julian/");
+
 
         for (List<Character> e : samples.getPositiveSamples()) {
             assertTrue(format("The following sample should be accepted but is rejected: %s", e.toString()), res.accepts(e, algebra));

@@ -25,19 +25,31 @@ public class GenAutomataTest {
 
 
     @Test
-    public void GeneralisePredicatesTest() throws IOException, InvalidConfigurationException, DeterminismViolationException, TimeoutException {
+    public void GeneralisePredicatesTest() throws IOException, DeterminismViolationException, TimeoutException {
 
         //lratuple.printSamples();
-        PosNegSamples<Character> samples =  PosNegSamples.readSamplesFromJsonFile("src/test/resources/characterSamples.txt", new StringToUnicodeWordParser());
+        PosNegSamples<Character> samples =  PosNegSamples.readSamplesFromJsonFile("src/test/resources/IntervallProblems/killerExample.json", new StringToUnicodeWordParser());
 
         BooleanAlgebra<CharPred, Character> algebra = new UnaryCharIntervalSolver();
         SFA<CharPred,Character> res = EDSM.run(samples.getPositiveSamples(), samples.getNegativeSamples(), algebra);
 
         //res.createDotFile("RES", "/home/julian/");
 
-        res = GenAutomata.generaliseTransitions(res, algebra);
+        res = res.mkTotal(algebra);
+
+        for (List<Character> e : samples.getPositiveSamples()) {
+            assertTrue(format("The following sample should be accepted but is rejected: %s", e.toString()), res.accepts(e, algebra));
+        }
+        for (List<Character> e : samples.getNegativeSamples()) {
+            assertFalse(format("The following sample should be rejected but is accepted: %s", e.toString()), res.accepts(e, algebra));
+        }
+
 
         //res.createDotFile("RES1", "/home/julian/");
+
+        res = GenAutomata.generaliseTransitions(res, algebra);
+
+        //res.createDotFile("RES2", "/home/julian/");
 
         for (List<Character> e : samples.getPositiveSamples()) {
             assertTrue(format("The following sample should be accepted but is rejected: %s", e.toString()), res.accepts(e, algebra));

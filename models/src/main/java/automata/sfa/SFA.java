@@ -327,6 +327,8 @@ public class SFA<P, S> extends Automaton<P, S> {
 			automaton.mkNonDeterministicRejecting(t, algebra);
 		}
 
+		automaton.isTotal = false;
+
 		return automaton;
 	}
 	

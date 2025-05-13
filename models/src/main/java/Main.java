@@ -59,6 +59,7 @@ public class Main {
         BooleanAlgebra<CharPred, Character> algebra = new UnaryCharIntervalSolver();
 
         SFA<CharPred,Character> res = EDSM.run(samples.getPositiveSamples(), samples.getNegativeSamples(), algebra);
+        res = res.mkTotal(algebra);
 
         if (cmdline.hasOption("o")) {
             Path p = Paths.get(cmdline.getOptionValue("o"));

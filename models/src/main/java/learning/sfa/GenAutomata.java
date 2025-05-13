@@ -31,29 +31,37 @@ public class GenAutomata<P,S> {
     * */
     public static <P,S>  SFA<P,S> generaliseTransitions(SFA<P, S> sfa, BooleanAlgebra<P, S> ba) throws TimeoutException {
 
+        sfa = sfa.mkTotal(ba);
+
+        // the following does not change anything (yet) since it's already a total automaton.
+
         for(var out : sfa.getStates()) {
-            Map<Pair<Integer,Integer>, List<S>> map = new HashMap<Pair<Integer,Integer>, List<S>>();
-            for (var mv : sfa.getTransitionsFrom(out)) {
-                S witness = mv.getWitness(ba);
-                Pair<Integer,Integer> key = new Pair<>(mv.from, mv.to);
-                if (map.containsKey(key)) {
-                    map.get(key).add(witness);
+            Map<Pair<Integer,Integer>, List<P>> map = new HashMap<>();
+            for (var mv : sfa.getMovesFrom(out)) {
+                if (Objects.requireNonNull(mv) instanceof SFAInputMove<P, S> imv) {
+                    Pair<Integer, Integer> key = new Pair<>(mv.from, mv.to);
+                    if (map.containsKey(key)) {
+                        map.get(key).add(imv.guard);
+                    } else {
+                        var newList = new ArrayList<P>();
+                        newList.add(imv.guard);
+                        map.put(key, newList);
+                    }
+                    // careful, we now destroy something
+                    sfa.removeTransition(imv);
                 } else {
-                    var newList = new ArrayList<S>();
-                    newList.add(witness);
-                    map.put(key, newList);
+                    throw new IllegalStateException("Move should be an instance of SFAInputMove, but is an instance of " + mv.getClass().getSimpleName());
                 }
-                // careful, we now destroy something
-                sfa.removeTransition(mv);
+
             }
             List<Pair<Integer,Integer>> keys = new ArrayList<>();
-            ArrayList<Collection<S>> vals = new ArrayList<>();
+            ArrayList<Collection<P>> vals = new ArrayList<>();
             for (var entry: map.entrySet()) {
                 keys.add(entry.getKey());
                 vals.add(entry.getValue());
             }
 
-            ArrayList<P> preds = ba.GetSeparatingPredicates(vals, Long.MAX_VALUE);
+            ArrayList<P> preds = ba.GetSeparatingPredicatesFromPredicates(vals, Long.MAX_VALUE);
 
             for (int i = 0; i < keys.size(); i++) {
                 SFAInputMove<P,S> mv = new SFAInputMove<>(keys.get(i).first, keys.get(i).second, preds.get(i));

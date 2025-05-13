@@ -1,4 +1,0 @@
-{
-"pos": ["ba", "abb", "aa", "aaaaa", "bbbbab", "cccccc", "ccc", "cccccccc"],
-"neg": ["bbbababab", "bab", "aaa", "cccc"]
-}
