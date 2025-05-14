@@ -72,10 +72,17 @@ public class Main {
 
     public static void main(String[] args) throws TimeoutException, InvalidConfigurationException, IOException, DeterminismViolationException {
 
-        Option theory = Option.builder("theory")
+        Option theory = Option.builder("thy")
+                .longOpt("theory")
                 .hasArg()
                 .required()
                 .build();
+
+        Option strat = Option.builder("strat")
+                .longOpt("strategy")
+                .hasArg()
+                .build();
+
         Option inputFile = Option.builder("i")
                 .longOpt("input")
                 .hasArg()
@@ -96,6 +103,8 @@ public class Main {
         options.addOption(inputFile);
         options.addOption(output);
         options.addOption(format);
+        options.addOption(strat);
+
         CommandLineParser parser = new DefaultParser();
         CommandLine commandLine = null;
         try {
