@@ -75,7 +75,14 @@ public class CharPred extends ICharPred{
 	public CharPred(ImmutableList<ImmutablePair<Character, Character>> intervals){
 		this(intervals,false);
 	}
-	
+
+	public void isValidInterval() {
+		for (ImmutablePair<Character, Character> interval : checkNotNull(intervals)) {
+		checkArgument(interval.left != null && interval.right != null &&
+				interval.left <= interval.right);
+		}
+	}
+
 	public CharPred(ImmutableList<ImmutablePair<Character, Character>> intervals, boolean isReturn) {
 		for (ImmutablePair<Character, Character> interval : checkNotNull(intervals)) {
 			checkArgument(interval.left != null && interval.right != null &&
@@ -87,7 +94,7 @@ public class CharPred extends ICharPred{
 			setAsReturn();
 	}
 
-	private static ImmutableList<ImmutablePair<Character, Character>> sortIntervals(
+	public static ImmutableList<ImmutablePair<Character, Character>> sortIntervals(
 			ImmutableList<ImmutablePair<Character, Character>> intervals) {
 		for (ImmutablePair<Character, Character> interval : checkNotNull(intervals)) {
 			checkArgument(interval.left != null && interval.right != null &&

@@ -31,7 +31,7 @@ public class EDSMTest {
         assert listOfFiles != null;
         for (File file : listOfFiles) {
             if (file.isFile() && file.getName().endsWith(".txt")) {
-                PosNegSamples<LRATuple> lratuple =  PosNegSamples.readSamplesfromFile(file.getPath(), new LRATupleParser());
+                PosNegSamples<LRATuple> lratuple =  PosNegSamples.readSamplesFromFile(file.getPath(), new LRATupleParser());
 
                 BooleanAlgebra<BooleanFormula, LRATuple> algebra = new RationalTupleCompAlgebra(2);
 

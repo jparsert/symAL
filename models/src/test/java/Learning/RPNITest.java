@@ -33,7 +33,7 @@ public class RPNITest {
         assert listOfFiles != null;
         for (File file : listOfFiles) {
             if (file.isFile() && file.getName().endsWith(".txt")) {
-                PosNegSamples<LRATuple> lratuple =  PosNegSamples.readSamplesfromFile(file.getPath(), new LRATupleParser());
+                PosNegSamples<LRATuple> lratuple =  PosNegSamples.readSamplesFromFile(file.getPath(), new LRATupleParser());
 
                 BooleanAlgebra<BooleanFormula, LRATuple> algebra = new RationalTupleCompAlgebra(2);
 
@@ -53,7 +53,7 @@ public class RPNITest {
 
     @Test
     public void PTATest() throws FileNotFoundException, InvalidConfigurationException, DeterminismViolationException, TimeoutException {
-        PosNegSamples<LRATuple> lratuple =  PosNegSamples.readSamplesfromFile("../benchmarks/passiveLearning/ratTuple.txt", new LRATupleParser());
+        PosNegSamples<LRATuple> lratuple =  PosNegSamples.readSamplesFromFile("../benchmarks/passiveLearning/ratTuple.txt", new LRATupleParser());
         //lratuple.printSamples();
 
         BooleanAlgebra<BooleanFormula, LRATuple> algebra = new RationalTupleCompAlgebra(2);
@@ -71,7 +71,7 @@ public class RPNITest {
 
     @Test
     public void TestRPNI() throws FileNotFoundException, InvalidConfigurationException, DeterminismViolationException, TimeoutException {
-        PosNegSamples<LRATuple> lratuple =  PosNegSamples.readSamplesfromFile("../benchmarks/passiveLearning/ratTuple.txt", new LRATupleParser());
+        PosNegSamples<LRATuple> lratuple =  PosNegSamples.readSamplesFromFile("../benchmarks/passiveLearning/ratTuple.txt", new LRATupleParser());
         //lratuple.printSamples();
 
         BooleanAlgebra<BooleanFormula, LRATuple> algebra = new RationalTupleCompAlgebra(2);
@@ -83,7 +83,7 @@ public class RPNITest {
 
     @Test
     public void TestRPNINegEx() throws FileNotFoundException, InvalidConfigurationException, DeterminismViolationException, TimeoutException {
-        PosNegSamples<LRATuple> lratuple =  PosNegSamples.readSamplesfromFile("src/test/resources/RatTuples/rpniNegExp.txt", new LRATupleParser());
+        PosNegSamples<LRATuple> lratuple =  PosNegSamples.readSamplesFromFile("src/test/resources/RatTuples/rpniNegExp.txt", new LRATupleParser());
         //lratuple.printSamples();
 
         BooleanAlgebra<BooleanFormula, LRATuple> algebra = new RationalTupleCompAlgebra(2);

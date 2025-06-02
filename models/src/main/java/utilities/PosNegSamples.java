@@ -49,7 +49,7 @@ public class PosNegSamples<E> {
         }
     }
 
-    public static <E,P extends ElementParser<E>> PosNegSamples<E> readSamplesfromFile(String fileName, P parser) throws FileNotFoundException {
+    public static <E,P extends ElementParser<E>> PosNegSamples<E> readSamplesFromFile(String fileName, P parser) throws FileNotFoundException {
 
         PosNegSamples<E> readPosNegSamples = new PosNegSamples<>();
 

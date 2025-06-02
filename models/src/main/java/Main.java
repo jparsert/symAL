@@ -8,6 +8,8 @@ import theory.BooleanAlgebra;
 import theory.LRATuples.LRATuple;
 import theory.LRATuples.RationalTupleCompAlgebra;
 import theory.characters.CharPred;
+import theory.characters.CharTuplePred;
+import theory.intervals.CharIntervalTupleSolver;
 import theory.intervals.UnaryCharIntervalSolver;
 import utilities.*;
 
@@ -26,7 +28,7 @@ import utilities.parsing.StringToUnicodeWordParser;
 public class Main {
 
     private static void ratTupleComparisonAlgebra(CommandLine cmdline) throws FileNotFoundException, InvalidConfigurationException, DeterminismViolationException, TimeoutException {
-        PosNegSamples<LRATuple> lratuple =  PosNegSamples.readSamplesfromFile(cmdline.getOptionValue("i"), new LRATupleParser());
+        PosNegSamples<LRATuple> lratuple =  PosNegSamples.readSamplesFromFile(cmdline.getOptionValue("i"), new LRATupleParser());
         //lratuple.printSamples();
 
         //todo remove fixed dimension
@@ -54,11 +56,27 @@ public class Main {
         }
         PosNegSamples<Character> samples =  PosNegSamples.readSamplesFromJsonFile(cmdline.getOptionValue("i"), new StringToUnicodeWordParser());
 
-
         //todo all of this
         BooleanAlgebra<CharPred, Character> algebra = new UnaryCharIntervalSolver();
 
-        SFA<CharPred,Character> res = EDSM.run(samples.getPositiveSamples(), samples.getNegativeSamples(), algebra);
+        SFA<CharPred,Character> res;
+
+        if (cmdline.hasOption("strategy")) {
+            switch (cmdline.getOptionValue("strategy")) {
+                case "edsm" -> {
+                    res = EDSM.run(samples.getPositiveSamples(), samples.getNegativeSamples(), algebra);
+                }
+                case "rpni" -> {
+                    res = RPNI.run(samples.getPositiveSamples(), samples.getNegativeSamples(), algebra);
+                }
+                default -> {
+                    res = EDSM.run(samples.getPositiveSamples(), samples.getNegativeSamples(), algebra);
+                }
+            }
+        } else {
+            res = EDSM.run(samples.getPositiveSamples(), samples.getNegativeSamples(), algebra);
+        }
+
         res = res.mkTotal(algebra);
 
         if (cmdline.hasOption("o")) {
@@ -69,6 +87,50 @@ public class Main {
         }
 
     }
+
+    private static void charIntervalTupleSolver(CommandLine cmdline) throws IOException {
+        if (!cmdline.getOptionValue("i").endsWith(".json")) {
+            if (cmdline.hasOption("format")) {
+                if (! cmdline.getOptionValue("format").equals("json")) {
+                    throw new IllegalArgumentException("Expected Json file as input!");
+                }
+            } else {
+                throw new IllegalArgumentException("Expected Json file as input!");
+            }
+        }
+        PosNegSamples<Character[]> samples = null;// =  PosNegSamples.readSamplesFromJsonFile(cmdline.getOptionValue("i"), new StringToUnicodeWordParser());
+
+        //todo all of this
+        BooleanAlgebra<CharTuplePred, Character[]> algebra = new CharIntervalTupleSolver(4);
+
+        SFA<CharPred,Character> res;
+
+        if (cmdline.hasOption("strategy")) {
+            switch (cmdline.getOptionValue("strategy")) {
+                case "edsm" -> {
+                   /// res = EDSM.run(samples.getPositiveSamples(), samples.getNegativeSamples(), algebra);
+                }
+                case "rpni" -> {
+                   // res = RPNI.run(samples.getPositiveSamples(), samples.getNegativeSamples(), algebra);
+                }
+                default -> {
+                   // res = EDSM.run(samples.getPositiveSamples(), samples.getNegativeSamples(), algebra);
+                }
+            }
+        } else {
+           // res = EDSM.run(samples.getPositiveSamples(), samples.getNegativeSamples(), algebra);
+        }
+
+        //res = res.mkTotal(algebra);
+
+        if (cmdline.hasOption("o")) {
+            Path p = Paths.get(cmdline.getOptionValue("o"));
+            //res.createDotFile(p.getFileName().toString(), p.getParent().toString() + File.separator);
+        } else {
+            //System.out.println(res.toString());
+        }
+    }
+
 
     public static void main(String[] args) throws TimeoutException, InvalidConfigurationException, IOException, DeterminismViolationException {
 
@@ -81,6 +143,7 @@ public class Main {
         Option strat = Option.builder("strat")
                 .longOpt("strategy")
                 .hasArg()
+                //. ("Strategy to use. Default is EDSM for CharComparison.")
                 .build();
 
         Option inputFile = Option.builder("i")
@@ -118,7 +181,9 @@ public class Main {
         switch (commandLine.getOptionValue("theory")) {
             case "RatTupComp" -> ratTupleComparisonAlgebra(commandLine);
             case "CharComparison" -> integerComparisonAlgebra(commandLine);
+            case "CharIntervalTupleSolver" -> charIntervalTupleSolver(commandLine);
         }
 
     }
+
 }
