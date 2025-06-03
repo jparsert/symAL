@@ -98,8 +98,6 @@ public class Main {
 
     }
 
-
-
     private static void charIntervalTupleSolver(CommandLine cmdline) throws IOException, DeterminismViolationException, TimeoutException {
         String jsonInputFile = getJSONInputFile(cmdline);
         PosNegSamples<Character[]> samples =  PosNegSamples.readSamplesFromJsonFile(jsonInputFile, new CharIntervalTupleParser());
