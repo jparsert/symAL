@@ -22,10 +22,34 @@ import java.nio.file.Paths;
 
 import org.apache.commons.cli.*;
 import utilities.exceptions.DeterminismViolationException;
+import utilities.parsing.CharIntervalTupleParser;
+import utilities.parsing.ElementParser;
 import utilities.parsing.LRATupleParser;
 import utilities.parsing.StringToUnicodeWordParser;
 
 public class Main {
+
+    private static String getJSONInputFile(CommandLine cmdline) {
+        if (!cmdline.getOptionValue("i").endsWith(".json")) {
+            if (cmdline.hasOption("format")) {
+                if (! cmdline.getOptionValue("format").equals("json")) {
+                    throw new IllegalArgumentException("Expected Json file as input!");
+                }
+            } else {
+                throw new IllegalArgumentException("Expected Json file as input!");
+            }
+        }
+        return cmdline.getOptionValue("i");
+    }
+
+    private static  <E,P> void printResultAutomaton(SFA<E,P> res, CommandLine cmdline) {
+        if (cmdline.hasOption("o")) {
+            Path p = Paths.get(cmdline.getOptionValue("o"));
+            res.createDotFile(p.getFileName().toString(), p.getParent().toString() + File.separator);
+        } else {
+            System.out.println(res.toString());
+        }
+    }
 
     private static void ratTupleComparisonAlgebra(CommandLine cmdline) throws FileNotFoundException, InvalidConfigurationException, DeterminismViolationException, TimeoutException {
         PosNegSamples<LRATuple> lratuple =  PosNegSamples.readSamplesFromFile(cmdline.getOptionValue("i"), new LRATupleParser());
@@ -45,18 +69,9 @@ public class Main {
     }
 
     private static void integerComparisonAlgebra(CommandLine cmdline) throws IOException, DeterminismViolationException, TimeoutException {
-        if (!cmdline.getOptionValue("i").endsWith(".json")) {
-            if (cmdline.hasOption("format")) {
-                if (! cmdline.getOptionValue("format").equals("json")) {
-                    throw new IllegalArgumentException("Expected Json file as input!");
-                }
-            } else {
-                throw new IllegalArgumentException("Expected Json file as input!");
-            }
-        }
-        PosNegSamples<Character> samples =  PosNegSamples.readSamplesFromJsonFile(cmdline.getOptionValue("i"), new StringToUnicodeWordParser());
+        String jsonInputFile = getJSONInputFile(cmdline);
+        PosNegSamples<Character> samples =  PosNegSamples.readSamplesFromJsonFile(jsonInputFile, new StringToUnicodeWordParser());
 
-        //todo all of this
         BooleanAlgebra<CharPred, Character> algebra = new UnaryCharIntervalSolver();
 
         SFA<CharPred,Character> res;
@@ -79,56 +94,44 @@ public class Main {
 
         res = res.mkTotal(algebra);
 
-        if (cmdline.hasOption("o")) {
-            Path p = Paths.get(cmdline.getOptionValue("o"));
-            res.createDotFile(p.getFileName().toString(), p.getParent().toString() + File.separator);
-        } else {
-            System.out.println(res.toString());
-        }
+        printResultAutomaton(res, cmdline);
 
     }
 
-    private static void charIntervalTupleSolver(CommandLine cmdline) throws IOException {
-        if (!cmdline.getOptionValue("i").endsWith(".json")) {
-            if (cmdline.hasOption("format")) {
-                if (! cmdline.getOptionValue("format").equals("json")) {
-                    throw new IllegalArgumentException("Expected Json file as input!");
-                }
-            } else {
-                throw new IllegalArgumentException("Expected Json file as input!");
-            }
+
+
+    private static void charIntervalTupleSolver(CommandLine cmdline) throws IOException, DeterminismViolationException, TimeoutException {
+        String jsonInputFile = getJSONInputFile(cmdline);
+        PosNegSamples<Character[]> samples =  PosNegSamples.readSamplesFromJsonFile(jsonInputFile, new CharIntervalTupleParser());
+
+        if(samples.getDimension().isEmpty()) {
+            throw new UnknownError("Letters are not iterables.");
         }
-        PosNegSamples<Character[]> samples = null;// =  PosNegSamples.readSamplesFromJsonFile(cmdline.getOptionValue("i"), new StringToUnicodeWordParser());
 
-        //todo all of this
-        BooleanAlgebra<CharTuplePred, Character[]> algebra = new CharIntervalTupleSolver(4);
+        BooleanAlgebra<CharTuplePred, Character[]> algebra = new CharIntervalTupleSolver(samples.getDimension().get());
 
-        SFA<CharPred,Character> res;
+        SFA<CharTuplePred,Character[]> res;
 
         if (cmdline.hasOption("strategy")) {
             switch (cmdline.getOptionValue("strategy")) {
                 case "edsm" -> {
-                   /// res = EDSM.run(samples.getPositiveSamples(), samples.getNegativeSamples(), algebra);
+                   res = EDSM.run(samples.getPositiveSamples(), samples.getNegativeSamples(), algebra);
                 }
                 case "rpni" -> {
-                   // res = RPNI.run(samples.getPositiveSamples(), samples.getNegativeSamples(), algebra);
+                   res = RPNI.run(samples.getPositiveSamples(), samples.getNegativeSamples(), algebra);
                 }
                 default -> {
-                   // res = EDSM.run(samples.getPositiveSamples(), samples.getNegativeSamples(), algebra);
+                   res = EDSM.run(samples.getPositiveSamples(), samples.getNegativeSamples(), algebra);
                 }
             }
         } else {
-           // res = EDSM.run(samples.getPositiveSamples(), samples.getNegativeSamples(), algebra);
+           res = EDSM.run(samples.getPositiveSamples(), samples.getNegativeSamples(), algebra);
         }
 
         //res = res.mkTotal(algebra);
 
-        if (cmdline.hasOption("o")) {
-            Path p = Paths.get(cmdline.getOptionValue("o"));
-            //res.createDotFile(p.getFileName().toString(), p.getParent().toString() + File.separator);
-        } else {
-            //System.out.println(res.toString());
-        }
+        printResultAutomaton(res, cmdline);
+
     }
 
 

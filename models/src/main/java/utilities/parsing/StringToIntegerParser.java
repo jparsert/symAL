@@ -8,7 +8,7 @@ import java.util.List;
 
 public class StringToIntegerParser implements WordParser<Integer> {
     @Override
-    public List<Integer> parse(String word) throws IOException {
+    public List<Integer> parse(Object word) throws IOException {
         /*
         List<Character> chars = new ArrayList<Character>(Chars.asList(word.toCharArray()));
 

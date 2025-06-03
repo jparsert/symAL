@@ -5,6 +5,6 @@ import java.util.List;
 
 public interface WordParser <E> {
 
-    List<E> parse(String word) throws IOException;
+    List<E> parse(Object word) throws IOException;
 
 }

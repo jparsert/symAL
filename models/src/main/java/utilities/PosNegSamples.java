@@ -11,10 +11,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 
 public class PosNegSamples<E> {
@@ -30,6 +27,8 @@ public class PosNegSamples<E> {
     private final List<List<E>> positiveSamples;
 
     private final List<List<E>> negativeSamples;
+
+    private Optional<Integer> dimension = Optional.empty();
 
 
     private PosNegSamples() {
@@ -85,28 +84,70 @@ public class PosNegSamples<E> {
     }
 
 
-    // We read from json file
+    // We read from json file where each word is a string of single elements (e.g. chars) in the array.
     public static <E,P extends WordParser<E>> PosNegSamples<E> readSamplesFromJsonFile(String fileName, P parser) throws IOException {
 
         // Read the file into a String
         String content = new String(Files.readAllBytes(Paths.get(fileName)));
         JSONObject json = new JSONObject(content);
 
-        JSONArray positiveSamples = json.getJSONArray("pos");
-        JSONArray negativeSamples = json.getJSONArray("neg");
-
         PosNegSamples<E> readPosNegSamples = new PosNegSamples<>();
 
+        JSONArray positiveSamples = json.getJSONArray("pos");
+        JSONArray negativeSamples = json.getJSONArray("neg");
+        if (json.has("dimension")) {
+            readPosNegSamples.dimension = Optional.of(json.getInt("dimension"));
+        }
+
         for (int i = 0; i < positiveSamples.length(); i++) {
-            String sample = positiveSamples.getString(i);
-            readPosNegSamples.positiveSamples.add(parser.parse(sample));
+            readPosNegSamples.positiveSamples.add(parser.parse(positiveSamples.get(i)));
         }
 
         for (int i = 0; i < negativeSamples.length(); i++) {
-            String sample = negativeSamples.getString(i);
-            readPosNegSamples.negativeSamples.add(parser.parse(sample));
+            readPosNegSamples.negativeSamples.add(parser.parse(negativeSamples.get(i)));
         }
 
         return readPosNegSamples;
     }
+
+    public Optional<Integer> getDimension() {
+        return dimension;
+    }
+
+    public void setDimension(Optional<Integer> dimension) {
+        this.dimension = dimension;
+    }
+
+    public boolean verifyDimensionality() {
+        if (!dimension.isPresent()) {
+            return true;
+        }
+
+        for(List<E> sample : positiveSamples) {
+            for (E el : sample) {
+                if (el instanceof Character[] arr) {
+                    if (arr.length != dimension.get()) {
+                        return false;
+                    }
+                } else {
+                    throw new UnknownError("Letters in words are not instances of the supported types.");
+                }
+            }
+        }
+
+        for(List<E> sample : negativeSamples) {
+            for (E el : sample) {
+                if (el instanceof Character[] arr) {
+                    if (arr.length != dimension.get()) {
+                        return false;
+                    }
+                } else {
+                    throw new UnknownError("Letters in words are not instances of the supported types.");
+                }
+            }
+        }
+
+        return true;
+    }
+
 }
