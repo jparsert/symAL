@@ -1,7 +1,7 @@
 import automata.sfa.SFA;
 import learning.sfa.EDSM;
 import learning.sfa.RPNI;
-import learning.sfa.RPNIInd;
+import learning.sfa.LearningWithIndEx;
 import org.sat4j.specs.TimeoutException;
 import org.sosy_lab.common.configuration.InvalidConfigurationException;
 import org.sosy_lab.java_smt.api.BooleanFormula;
@@ -85,7 +85,10 @@ public class Main {
                     res = RPNI.run(samples.getPositiveSamples(), samples.getNegativeSamples(), algebra);
                 }
                 case "rpniind" -> {
-                    res = RPNIInd.RPNIInductiveFixedPoint(samples, algebra);
+                    res = LearningWithIndEx.RPNIInductiveFixedPoint(samples, algebra);
+                }
+                case "edsmind" -> {
+                    res = LearningWithIndEx.EDSMInductiveFixedPoint(samples, algebra);
                 }
                 default -> {
                     res = EDSM.run(samples.getPositiveSamples(), samples.getNegativeSamples(), algebra);

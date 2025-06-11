@@ -27,6 +27,12 @@ public class EDSM<P,S>  {
     public static <P,S> SFA<P,S> run(Collection<List<S>> positive, Collection<List<S>> negative, BooleanAlgebra<P, S> algebra)
             throws DeterminismViolationException, TimeoutException {
 
+        for(List<S> e : negative) {
+            if(positive.contains(e)) {
+                throw new RuntimeException("Negative and Positive Set are not disjoint! The following are in both sets: " + e);
+            }
+        }
+
         EDSM<P,S> syntesiser = new EDSM<P,S>();
         return syntesiser.execute(positive, negative, algebra);
     }
