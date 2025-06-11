@@ -169,13 +169,9 @@ public class CharPred extends ICharPred{
 		StringBuilder sb = new StringBuilder();
 		sb.append("[");
 		for (ImmutablePair<Character, Character> pair : intervals) {
-			if (pair.left == pair.right)
-				sb.append(printChar(pair.left));
-			else {
 				sb.append(printChar(pair.left));
 				sb.append("-");
 				sb.append(printChar(pair.right));
-			}
 		}
 		sb.append("]");
 
@@ -219,11 +215,16 @@ public class CharPred extends ICharPred{
 		unescapeMap.put('\\', "\\\\");
 		if (unescapeMap.containsKey(c)) {
 			return unescapeMap.get(c);
+		} else { // no pretty string printing. Everything is printed in the unicode format
+			return String.format("\\u%04x", (int) c);
+		}
+		/*  // for pretty string printing
 		} else if (c < 0x20 || c > 0x7f) {
 			return String.format("\\u%04x", (int) c);
 		} else {
 			return Character.toString(c);
 		}
+		*/
 	}
 
 }

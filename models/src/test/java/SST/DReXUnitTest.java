@@ -303,7 +303,7 @@ public class DReXUnitTest {
 		assertEquals('a', a.instantiateWith('b'));
 		assertEquals('a', a.instantiateWith('2'));
 		assertEquals('a', a.instantiateWith('@'));
-		assertEquals("x -> a", a.toString());
+		assertEquals("x -> \\u0061", a.toString());
 		assertEquals(StdCharPred.TRUE, a.substIn(new CharPred('a', 'c'), ba));
 		assertEquals(StdCharPred.FALSE, a.substIn(new CharPred('b', 'c'), ba));
 		assertTrue(a.equals(new CharConstant('a')));

@@ -19,12 +19,15 @@ import org.sosy_lab.java_smt.api.BooleanFormula;
 import theory.BooleanAlgebra;
 import theory.LRATuples.LRATuple;
 import theory.LRATuples.RationalTupleCompAlgebra;
+import theory.characters.CharPred;
 import theory.characters.CharTuplePred;
 import theory.intervals.CharIntervalTupleSolver;
+import theory.intervals.UnaryCharIntervalSolver;
 import utilities.exceptions.DeterminismViolationException;
 import utilities.parsing.CharIntervalTupleParser;
 import utilities.parsing.LRATupleParser;
 import utilities.PosNegSamples;
+import utilities.parsing.StringToUnicodeWordParser;
 
 
 public class RPNITest {
@@ -85,6 +88,60 @@ public class RPNITest {
             }
         }
         assert(files > 0);
+    }
+
+
+    @Test
+    public void RPNICharIntervalTest() throws IOException, InvalidConfigurationException, DeterminismViolationException, TimeoutException {
+        File folder = new File("src/test/resources/IntervalProblems");
+        File[] listOfFiles = folder.listFiles();
+        assert listOfFiles != null;
+
+        int files = 0;
+
+        for (File file : listOfFiles) {
+            if (file.isFile() && file.getName().endsWith(".json")) {
+                files += 1;
+                PosNegSamples<Character> samples =  PosNegSamples.readSamplesFromJsonFile(file.getPath(), new StringToUnicodeWordParser());
+
+                BooleanAlgebra<CharPred, Character> algebra = new UnaryCharIntervalSolver();
+
+                SFA<CharPred, Character> res = RPNI.run(samples.getPositiveSamples(), samples.getNegativeSamples(), algebra);
+
+                for (List<Character> e : samples.getPositiveSamples()) {
+                    assertTrue(format("The following sample should be accepted but is rejected: %s", e), res.accepts(e, algebra));
+                }
+
+                for (List<Character> e : samples.getNegativeSamples()) {
+                    assertFalse(format("The following sample should NOT be accepted but is accepted: %s", e), res.accepts(e, algebra));
+                }
+                //res = res.mkTotal(algebra);
+                //res.createDotFile("ASD", "/home/julian/");
+
+            }
+        }
+        assert(files > 0);
+    }
+
+    @Test
+    public void printingAfterRPNI() throws IOException, DeterminismViolationException, TimeoutException {
+        File file = new File("src/test/resources/IntervalProblems/OddPrintingBehaviour.json");
+        PosNegSamples<Character> samples =  PosNegSamples.readSamplesFromJsonFile(file.getPath(), new StringToUnicodeWordParser());
+
+        BooleanAlgebra<CharPred, Character> algebra = new UnaryCharIntervalSolver();
+
+        SFA<CharPred, Character> res = RPNI.run(samples.getPositiveSamples(), samples.getNegativeSamples(), algebra);
+        res = res.mkTotal(algebra);
+
+        res.createDotFile("RPNITest", "/home/julian/");
+
+        for (List<Character> e : samples.getPositiveSamples()) {
+            assertTrue(format("The following sample should be accepted but is rejected: %s", e), res.accepts(e, algebra));
+        }
+
+        for (List<Character> e : samples.getNegativeSamples()) {
+            assertFalse(format("The following sample should NOT be accepted but is accepted: %s", e), res.accepts(e, algebra));
+        }
     }
 
     @Test

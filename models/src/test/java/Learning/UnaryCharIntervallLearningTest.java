@@ -31,7 +31,7 @@ public class UnaryCharIntervallLearningTest {
     public void FirstTest() throws IOException, DeterminismViolationException, TimeoutException {
 
         //lratuple.printSamples();
-        PosNegSamples<Character> samples =  PosNegSamples.readSamplesFromJsonFile("src/test/resources/IntervallProblems/characterSamples.json", new StringToUnicodeWordParser());
+        PosNegSamples<Character> samples =  PosNegSamples.readSamplesFromJsonFile("src/test/resources/IntervalProblems/characterSamples.json", new StringToUnicodeWordParser());
 
         BooleanAlgebra<CharPred, Character> algebra = new UnaryCharIntervalSolver();
         SFA<CharPred,Character> res = EDSM.run(samples.getPositiveSamples(), samples.getNegativeSamples(), algebra);
@@ -51,13 +51,13 @@ public class UnaryCharIntervallLearningTest {
 
     @Test
     public void TestAllProblemsInFolderWithEDSM() throws IOException, DeterminismViolationException, TimeoutException {
-        File folder = new File("src/test/resources/IntervallProblems/");
+        File folder = new File("src/test/resources/IntervalProblems/");
         File[] listOfFiles = folder.listFiles();
 
         assert listOfFiles != null;
         for (File file : listOfFiles) {
             if (file.isFile() && file.getName().endsWith(".json")) {
-                PosNegSamples<Character> samples =  PosNegSamples.readSamplesFromJsonFile("src/test/resources/IntervallProblems/characterSamples.json", new StringToUnicodeWordParser());
+                PosNegSamples<Character> samples =  PosNegSamples.readSamplesFromJsonFile("src/test/resources/IntervalProblems/characterSamples.json", new StringToUnicodeWordParser());
 
                 BooleanAlgebra<CharPred, Character> algebra = new UnaryCharIntervalSolver();
                 SFA<CharPred,Character> res = EDSM.run(samples.getPositiveSamples(), samples.getNegativeSamples(), algebra);
@@ -82,13 +82,13 @@ public class UnaryCharIntervallLearningTest {
 
     @Test
     public void TestAllProblemsInFolderWithRPNI() throws IOException, DeterminismViolationException, TimeoutException {
-        File folder = new File("src/test/resources/IntervallProblems/");
+        File folder = new File("src/test/resources/IntervalProblems/");
         File[] listOfFiles = folder.listFiles();
 
         assert listOfFiles != null;
         for (File file : listOfFiles) {
             if (file.isFile() && file.getName().endsWith(".json")) {
-                PosNegSamples<Character> samples =  PosNegSamples.readSamplesFromJsonFile("src/test/resources/IntervallProblems/characterSamples.json", new StringToUnicodeWordParser());
+                PosNegSamples<Character> samples =  PosNegSamples.readSamplesFromJsonFile("src/test/resources/IntervalProblems/characterSamples.json", new StringToUnicodeWordParser());
 
                 BooleanAlgebra<CharPred, Character> algebra = new UnaryCharIntervalSolver();
                 SFA<CharPred,Character> res = RPNI.run(samples.getPositiveSamples(), samples.getNegativeSamples(), algebra);

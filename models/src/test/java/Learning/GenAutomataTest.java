@@ -28,7 +28,7 @@ public class GenAutomataTest {
     public void GeneralisePredicatesTest() throws IOException, DeterminismViolationException, TimeoutException {
 
         //lratuple.printSamples();
-        PosNegSamples<Character> samples =  PosNegSamples.readSamplesFromJsonFile("src/test/resources/IntervallProblems/killerExample.json", new StringToUnicodeWordParser());
+        PosNegSamples<Character> samples =  PosNegSamples.readSamplesFromJsonFile("src/test/resources/IntervalProblems/killerExample.json", new StringToUnicodeWordParser());
 
         BooleanAlgebra<CharPred, Character> algebra = new UnaryCharIntervalSolver();
         SFA<CharPred,Character> res = EDSM.run(samples.getPositiveSamples(), samples.getNegativeSamples(), algebra);
