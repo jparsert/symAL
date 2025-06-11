@@ -5,15 +5,13 @@ import learning.sfa.EDSM;
 import learning.sfa.GenAutomata;
 import org.junit.Test;
 import org.sat4j.specs.TimeoutException;
-import org.sosy_lab.common.configuration.InvalidConfigurationException;
 import theory.BooleanAlgebra;
 import theory.characters.CharPred;
 import theory.intervals.UnaryCharIntervalSolver;
-import utilities.PosNegSamples;
+import utilities.LearningSamples;
 import utilities.exceptions.DeterminismViolationException;
 import utilities.parsing.StringToUnicodeWordParser;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 
@@ -28,7 +26,7 @@ public class GenAutomataTest {
     public void GeneralisePredicatesTest() throws IOException, DeterminismViolationException, TimeoutException {
 
         //lratuple.printSamples();
-        PosNegSamples<Character> samples =  PosNegSamples.readSamplesFromJsonFile("src/test/resources/IntervalProblems/killerExample.json", new StringToUnicodeWordParser());
+        LearningSamples<Character> samples =  LearningSamples.readSamplesFromJsonFile("src/test/resources/IntervalProblems/killerExample.json", new StringToUnicodeWordParser());
 
         BooleanAlgebra<CharPred, Character> algebra = new UnaryCharIntervalSolver();
         SFA<CharPred,Character> res = EDSM.run(samples.getPositiveSamples(), samples.getNegativeSamples(), algebra);

@@ -33,6 +33,13 @@ public class RPNI<P,S> {
 
     public static <P,S> SFA<P,S> run(Collection<List<S>> positive, Collection<List<S>> negative, BooleanAlgebra<P, S> algebra)
             throws DeterminismViolationException, TimeoutException {
+
+        for(List<S> e : negative) {
+            if(positive.contains(e)) {
+                throw new RuntimeException("Negative and Positive Set are not disjoint! The following are in both sets: " + e);
+            }
+        }
+
         RPNI<P,S> rpni = new RPNI<P,S>();
         return rpni.execute(positive, negative, algebra);
     }

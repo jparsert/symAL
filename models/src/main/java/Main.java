@@ -1,6 +1,7 @@
 import automata.sfa.SFA;
 import learning.sfa.EDSM;
 import learning.sfa.RPNI;
+import learning.sfa.RPNIInd;
 import org.sat4j.specs.TimeoutException;
 import org.sosy_lab.common.configuration.InvalidConfigurationException;
 import org.sosy_lab.java_smt.api.BooleanFormula;
@@ -23,7 +24,6 @@ import java.nio.file.Paths;
 import org.apache.commons.cli.*;
 import utilities.exceptions.DeterminismViolationException;
 import utilities.parsing.CharIntervalTupleParser;
-import utilities.parsing.ElementParser;
 import utilities.parsing.LRATupleParser;
 import utilities.parsing.StringToUnicodeWordParser;
 
@@ -52,7 +52,7 @@ public class Main {
     }
 
     private static void ratTupleComparisonAlgebra(CommandLine cmdline) throws FileNotFoundException, InvalidConfigurationException, DeterminismViolationException, TimeoutException {
-        PosNegSamples<LRATuple> lratuple =  PosNegSamples.readSamplesFromFile(cmdline.getOptionValue("i"), new LRATupleParser());
+        LearningSamples<LRATuple> lratuple =  LearningSamples.readSamplesFromFile(cmdline.getOptionValue("i"), new LRATupleParser());
         //lratuple.printSamples();
 
         //todo remove fixed dimension
@@ -70,7 +70,7 @@ public class Main {
 
     private static void integerComparisonAlgebra(CommandLine cmdline) throws IOException, DeterminismViolationException, TimeoutException {
         String jsonInputFile = getJSONInputFile(cmdline);
-        PosNegSamples<Character> samples =  PosNegSamples.readSamplesFromJsonFile(jsonInputFile, new StringToUnicodeWordParser());
+        LearningSamples<Character> samples =  LearningSamples.readSamplesFromJsonFile(jsonInputFile, new StringToUnicodeWordParser());
 
         BooleanAlgebra<CharPred, Character> algebra = new UnaryCharIntervalSolver();
 
@@ -83,6 +83,9 @@ public class Main {
                 }
                 case "rpni" -> {
                     res = RPNI.run(samples.getPositiveSamples(), samples.getNegativeSamples(), algebra);
+                }
+                case "rpniind" -> {
+                    res = RPNIInd.RPNIInductiveFixedPoint(samples, algebra);
                 }
                 default -> {
                     res = EDSM.run(samples.getPositiveSamples(), samples.getNegativeSamples(), algebra);
@@ -100,7 +103,7 @@ public class Main {
 
     private static void charIntervalTupleSolver(CommandLine cmdline) throws IOException, DeterminismViolationException, TimeoutException {
         String jsonInputFile = getJSONInputFile(cmdline);
-        PosNegSamples<Character[]> samples =  PosNegSamples.readSamplesFromJsonFile(jsonInputFile, new CharIntervalTupleParser());
+        LearningSamples<Character[]> samples =  LearningSamples.readSamplesFromJsonFile(jsonInputFile, new CharIntervalTupleParser());
 
         if(samples.getDimension().isEmpty()) {
             throw new UnknownError("Letters are not iterables.");

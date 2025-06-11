@@ -1,10 +1,7 @@
 package Theory;
 
 import org.junit.Test;
-import theory.BooleanAlgebra;
-import theory.characters.CharTuplePred;
-import theory.intervals.CharIntervalTupleSolver;
-import utilities.PosNegSamples;
+import utilities.LearningSamples;
 import utilities.parsing.CharIntervalTupleParser;
 
 import java.io.File;
@@ -23,7 +20,7 @@ public class TestCharIntervalTuple {
         for (File file : listOfFiles) {
             if (file.isFile() && file.getName().endsWith(".json")) {
                 files++;
-                PosNegSamples<Character[]> samples =  PosNegSamples.readSamplesFromJsonFile(file.getPath(), new CharIntervalTupleParser());
+                LearningSamples<Character[]> samples =  LearningSamples.readSamplesFromJsonFile(file.getPath(), new CharIntervalTupleParser());
 
                 assert(samples.getDimension().isPresent());
                 assert(samples.verifyDimensionality());

@@ -5,19 +5,14 @@ import learning.sfa.EDSM;
 import learning.sfa.RPNI;
 import org.junit.Test;
 import org.sat4j.specs.TimeoutException;
-import org.sosy_lab.java_smt.api.BooleanFormula;
 import theory.BooleanAlgebra;
-import theory.LRATuples.LRATuple;
-import theory.LRATuples.RationalTupleCompAlgebra;
 import theory.characters.CharPred;
 import theory.intervals.UnaryCharIntervalSolver;
-import utilities.PosNegSamples;
+import utilities.LearningSamples;
 import utilities.exceptions.DeterminismViolationException;
-import utilities.parsing.LRATupleParser;
 import utilities.parsing.StringToUnicodeWordParser;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 
@@ -31,7 +26,7 @@ public class UnaryCharIntervallLearningTest {
     public void FirstTest() throws IOException, DeterminismViolationException, TimeoutException {
 
         //lratuple.printSamples();
-        PosNegSamples<Character> samples =  PosNegSamples.readSamplesFromJsonFile("src/test/resources/IntervalProblems/characterSamples.json", new StringToUnicodeWordParser());
+        LearningSamples<Character> samples =  LearningSamples.readSamplesFromJsonFile("src/test/resources/IntervalProblems/characterSamples.json", new StringToUnicodeWordParser());
 
         BooleanAlgebra<CharPred, Character> algebra = new UnaryCharIntervalSolver();
         SFA<CharPred,Character> res = EDSM.run(samples.getPositiveSamples(), samples.getNegativeSamples(), algebra);
@@ -57,7 +52,7 @@ public class UnaryCharIntervallLearningTest {
         assert listOfFiles != null;
         for (File file : listOfFiles) {
             if (file.isFile() && file.getName().endsWith(".json")) {
-                PosNegSamples<Character> samples =  PosNegSamples.readSamplesFromJsonFile("src/test/resources/IntervalProblems/characterSamples.json", new StringToUnicodeWordParser());
+                LearningSamples<Character> samples =  LearningSamples.readSamplesFromJsonFile("src/test/resources/IntervalProblems/characterSamples.json", new StringToUnicodeWordParser());
 
                 BooleanAlgebra<CharPred, Character> algebra = new UnaryCharIntervalSolver();
                 SFA<CharPred,Character> res = EDSM.run(samples.getPositiveSamples(), samples.getNegativeSamples(), algebra);
@@ -88,7 +83,7 @@ public class UnaryCharIntervallLearningTest {
         assert listOfFiles != null;
         for (File file : listOfFiles) {
             if (file.isFile() && file.getName().endsWith(".json")) {
-                PosNegSamples<Character> samples =  PosNegSamples.readSamplesFromJsonFile("src/test/resources/IntervalProblems/characterSamples.json", new StringToUnicodeWordParser());
+                LearningSamples<Character> samples =  LearningSamples.readSamplesFromJsonFile("src/test/resources/IntervalProblems/characterSamples.json", new StringToUnicodeWordParser());
 
                 BooleanAlgebra<CharPred, Character> algebra = new UnaryCharIntervalSolver();
                 SFA<CharPred,Character> res = RPNI.run(samples.getPositiveSamples(), samples.getNegativeSamples(), algebra);

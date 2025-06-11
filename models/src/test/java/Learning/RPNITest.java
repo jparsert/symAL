@@ -26,7 +26,7 @@ import theory.intervals.UnaryCharIntervalSolver;
 import utilities.exceptions.DeterminismViolationException;
 import utilities.parsing.CharIntervalTupleParser;
 import utilities.parsing.LRATupleParser;
-import utilities.PosNegSamples;
+import utilities.LearningSamples;
 import utilities.parsing.StringToUnicodeWordParser;
 
 
@@ -40,7 +40,7 @@ public class RPNITest {
         assert listOfFiles != null;
         for (File file : listOfFiles) {
             if (file.isFile() && file.getName().endsWith(".txt")) {
-                PosNegSamples<LRATuple> lratuple =  PosNegSamples.readSamplesFromFile(file.getPath(), new LRATupleParser());
+                LearningSamples<LRATuple> lratuple =  LearningSamples.readSamplesFromFile(file.getPath(), new LRATupleParser());
 
                 BooleanAlgebra<BooleanFormula, LRATuple> algebra = new RationalTupleCompAlgebra(2);
 
@@ -68,7 +68,7 @@ public class RPNITest {
         for (File file : listOfFiles) {
             if (file.isFile() && file.getName().endsWith(".json")) {
                 files += 1;
-                PosNegSamples<Character[]> samples =  PosNegSamples.readSamplesFromJsonFile(file.getPath(), new CharIntervalTupleParser());
+                LearningSamples<Character[]> samples =  LearningSamples.readSamplesFromJsonFile(file.getPath(), new CharIntervalTupleParser());
 
                 assertTrue(samples.getDimension().isPresent());
                 BooleanAlgebra<CharTuplePred, Character[]> algebra = new CharIntervalTupleSolver(samples.getDimension().get());
@@ -102,7 +102,7 @@ public class RPNITest {
         for (File file : listOfFiles) {
             if (file.isFile() && file.getName().endsWith(".json")) {
                 files += 1;
-                PosNegSamples<Character> samples =  PosNegSamples.readSamplesFromJsonFile(file.getPath(), new StringToUnicodeWordParser());
+                LearningSamples<Character> samples =  LearningSamples.readSamplesFromJsonFile(file.getPath(), new StringToUnicodeWordParser());
 
                 BooleanAlgebra<CharPred, Character> algebra = new UnaryCharIntervalSolver();
 
@@ -126,7 +126,7 @@ public class RPNITest {
     @Test
     public void printingAfterRPNI() throws IOException, DeterminismViolationException, TimeoutException {
         File file = new File("src/test/resources/IntervalProblems/OddPrintingBehaviour.json");
-        PosNegSamples<Character> samples =  PosNegSamples.readSamplesFromJsonFile(file.getPath(), new StringToUnicodeWordParser());
+        LearningSamples<Character> samples =  LearningSamples.readSamplesFromJsonFile(file.getPath(), new StringToUnicodeWordParser());
 
         BooleanAlgebra<CharPred, Character> algebra = new UnaryCharIntervalSolver();
 
@@ -146,7 +146,7 @@ public class RPNITest {
 
     @Test
     public void PTATest() throws FileNotFoundException, InvalidConfigurationException, DeterminismViolationException, TimeoutException {
-        PosNegSamples<LRATuple> lratuple =  PosNegSamples.readSamplesFromFile("../benchmarks/passiveLearning/ratTuple.txt", new LRATupleParser());
+        LearningSamples<LRATuple> lratuple =  LearningSamples.readSamplesFromFile("../benchmarks/passiveLearning/ratTuple.txt", new LRATupleParser());
         //lratuple.printSamples();
 
         BooleanAlgebra<BooleanFormula, LRATuple> algebra = new RationalTupleCompAlgebra(2);
@@ -164,7 +164,7 @@ public class RPNITest {
 
     @Test
     public void TestRPNI() throws FileNotFoundException, InvalidConfigurationException, DeterminismViolationException, TimeoutException {
-        PosNegSamples<LRATuple> lratuple =  PosNegSamples.readSamplesFromFile("../benchmarks/passiveLearning/ratTuple.txt", new LRATupleParser());
+        LearningSamples<LRATuple> lratuple =  LearningSamples.readSamplesFromFile("../benchmarks/passiveLearning/ratTuple.txt", new LRATupleParser());
         //lratuple.printSamples();
 
         BooleanAlgebra<BooleanFormula, LRATuple> algebra = new RationalTupleCompAlgebra(2);
@@ -184,7 +184,7 @@ public class RPNITest {
 
     @Test
     public void TestRPNINegEx() throws FileNotFoundException, InvalidConfigurationException, DeterminismViolationException, TimeoutException {
-        PosNegSamples<LRATuple> lratuple =  PosNegSamples.readSamplesFromFile("src/test/resources/RatTuples/rpniNegExp.txt", new LRATupleParser());
+        LearningSamples<LRATuple> lratuple =  LearningSamples.readSamplesFromFile("src/test/resources/RatTuples/rpniNegExp.txt", new LRATupleParser());
         //lratuple.printSamples();
 
         BooleanAlgebra<BooleanFormula, LRATuple> algebra = new RationalTupleCompAlgebra(2);

@@ -14,7 +14,7 @@ import java.nio.file.Paths;
 import java.util.*;
 
 
-public class PosNegSamples<E> {
+public class LearningSamples<E> {
 
     public List<List<E>> getPositiveSamples() {
         return positiveSamples;
@@ -24,16 +24,24 @@ public class PosNegSamples<E> {
         return negativeSamples;
     }
 
+    public List<Pair<List<E>, List<E>>> getImplicationSamples() {
+        return implicationSamples;
+    }
+
+
     private final List<List<E>> positiveSamples;
 
     private final List<List<E>> negativeSamples;
 
+    private final List<Pair<List<E>,List<E>>> implicationSamples;
+
     private Optional<Integer> dimension = Optional.empty();
 
 
-    private PosNegSamples() {
+    private LearningSamples() {
         this.positiveSamples = new ArrayList<>();
         this.negativeSamples = new ArrayList<>();
+        this.implicationSamples = new ArrayList<>();
     }
 
     public void printSamples() {
@@ -46,11 +54,16 @@ public class PosNegSamples<E> {
         for (List<E> sample : negativeSamples) {
             System.out.println("\t" + sample);
         }
+
+        System.out.println("Implication/Inductive samples:");
+        for (Pair<List<E>, List<E>> sample : implicationSamples) {
+            System.out.println("\t" + sample.first + "\t-->\t" + sample.second);
+        }
     }
 
-    public static <E,P extends ElementParser<E>> PosNegSamples<E> readSamplesFromFile(String fileName, P parser) throws FileNotFoundException {
+    public static <E,P extends ElementParser<E>> LearningSamples<E> readSamplesFromFile(String fileName, P parser) throws FileNotFoundException {
 
-        PosNegSamples<E> readPosNegSamples = new PosNegSamples<>();
+        LearningSamples<E> readPosNegSamples = new LearningSamples<>();
 
         File file = new File(fileName);
         Scanner scanner = new Scanner(file);
@@ -85,13 +98,13 @@ public class PosNegSamples<E> {
 
 
     // We read from json file where each word is a string of single elements (e.g. chars) in the array.
-    public static <E,P extends WordParser<E>> PosNegSamples<E> readSamplesFromJsonFile(String fileName, P parser) throws IOException {
+    public static <E,P extends WordParser<E>> LearningSamples<E> readSamplesFromJsonFile(String fileName, P parser) throws IOException {
 
         // Read the file into a String
         String content = new String(Files.readAllBytes(Paths.get(fileName)));
         JSONObject json = new JSONObject(content);
 
-        PosNegSamples<E> readPosNegSamples = new PosNegSamples<>();
+        LearningSamples<E> readPosNegSamples = new LearningSamples<>();
 
         JSONArray positiveSamples = json.getJSONArray("pos");
         JSONArray negativeSamples = json.getJSONArray("neg");
@@ -106,6 +119,17 @@ public class PosNegSamples<E> {
         for (int i = 0; i < negativeSamples.length(); i++) {
             readPosNegSamples.negativeSamples.add(parser.parse(negativeSamples.get(i)));
         }
+
+        if (json.has("ind")) {
+            JSONArray ind = json.getJSONArray("ind");
+            for (int i = 0; i < ind.length(); i++) {
+                JSONArray pair = ind.getJSONArray(i);
+                List<E> fst = parser.parse(pair.get(0));
+                List<E> snd = parser.parse(pair.get(1));
+                readPosNegSamples.implicationSamples.add(new Pair<>(fst,snd));
+            }
+        }
+
 
         return readPosNegSamples;
     }

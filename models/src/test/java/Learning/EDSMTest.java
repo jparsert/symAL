@@ -14,7 +14,7 @@ import theory.intervals.CharIntervalTupleSolver;
 import utilities.exceptions.DeterminismViolationException;
 import utilities.parsing.CharIntervalTupleParser;
 import utilities.parsing.LRATupleParser;
-import utilities.PosNegSamples;
+import utilities.LearningSamples;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -35,7 +35,7 @@ public class EDSMTest {
         assert listOfFiles != null;
         for (File file : listOfFiles) {
             if (file.isFile() && file.getName().endsWith(".txt")) {
-                PosNegSamples<LRATuple> lratuple =  PosNegSamples.readSamplesFromFile(file.getPath(), new LRATupleParser());
+                LearningSamples<LRATuple> lratuple =  LearningSamples.readSamplesFromFile(file.getPath(), new LRATupleParser());
 
                 BooleanAlgebra<BooleanFormula, LRATuple> algebra = new RationalTupleCompAlgebra(2);
 
@@ -71,7 +71,7 @@ public class EDSMTest {
         for (File file : listOfFiles) {
             if (file.isFile() && file.getName().endsWith(".json")) {
                 files += 1;
-                PosNegSamples<Character[]> samples =  PosNegSamples.readSamplesFromJsonFile(file.getPath(), new CharIntervalTupleParser());
+                LearningSamples<Character[]> samples =  LearningSamples.readSamplesFromJsonFile(file.getPath(), new CharIntervalTupleParser());
 
                 assertTrue(samples.getDimension().isPresent());
                 BooleanAlgebra<CharTuplePred, Character[]> algebra = new CharIntervalTupleSolver(samples.getDimension().get());
