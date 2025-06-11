@@ -205,7 +205,8 @@ public class SFA<P, S> extends Automaton<P, S> {
 		aut.states.addAll(finalStates);
 
 		aut.initialState = initialState;
-		aut.finalStates = finalStates;
+		aut.finalStates = new HashSet<>();
+		aut.finalStates.addAll(finalStates);
 
 		for (SFAMove<A, B> t : transitions)
 			aut.addTransition(t, ba, true);
@@ -277,7 +278,7 @@ public class SFA<P, S> extends Automaton<P, S> {
 	// Makes the automaton reject word, in a deterministic manner, we reuse exiting moves. We throw an exception if
 	// the final state exists already and is accepting or if we
 	// reach non-determinism (not exhaustive, meaning if non-det exists we *might* reach it)
-	private void mkNonDeterministicRejecting(List<S> word, BooleanAlgebra<P,S> algebra) throws TimeoutException, DeterminismViolationException {
+	private void mkDeterministicRejecting(List<S> word, BooleanAlgebra<P,S> algebra) throws TimeoutException, DeterminismViolationException {
 		Pair<Collection<Integer>, List<S>> p = consumeLongestPrefix(word, algebra);
 		if (p.first.size() != 1) {
 			throw new DeterminismViolationException("The set of reached states is either empty or larger than 1. Size: "
@@ -324,7 +325,7 @@ public class SFA<P, S> extends Automaton<P, S> {
 
 		//Add negative samples
 		for (List<B> t : negative) {
-			automaton.mkNonDeterministicRejecting(t, algebra);
+			automaton.mkDeterministicRejecting(t, algebra);
 		}
 
 		automaton.isTotal = false;
