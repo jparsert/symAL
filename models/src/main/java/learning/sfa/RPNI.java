@@ -8,6 +8,7 @@ import automata.sfa.SFAMove;
 import org.sat4j.specs.TimeoutException;
 import theory.BooleanAlgebra;
 import utilities.exceptions.DeterminismViolationException;
+import utilities.exceptions.DisjointSetViolation;
 import utilities.exceptions.InvariantViolationException;
 import utilities.Pair;
 
@@ -36,7 +37,7 @@ public class RPNI<P,S> {
 
         for(List<S> e : negative) {
             if(positive.contains(e)) {
-                throw new RuntimeException("Negative and Positive Set are not disjoint! The following are in both sets: " + e);
+                throw new DisjointSetViolation("Negative and Positive Sets are not disjoint! The following is in both sets: " + e);
             }
         }
 

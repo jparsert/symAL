@@ -23,6 +23,7 @@ import java.nio.file.Paths;
 
 import org.apache.commons.cli.*;
 import utilities.exceptions.DeterminismViolationException;
+import utilities.exceptions.DisjointSetViolation;
 import utilities.parsing.CharIntervalTupleParser;
 import utilities.parsing.LRATupleParser;
 import utilities.parsing.StringToUnicodeWordParser;
@@ -74,28 +75,33 @@ public class Main {
 
         BooleanAlgebra<CharPred, Character> algebra = new UnaryCharIntervalSolver();
 
-        SFA<CharPred,Character> res;
-
-        if (cmdline.hasOption("strategy")) {
-            switch (cmdline.getOptionValue("strategy")) {
-                case "edsm" -> {
-                    res = EDSM.run(samples.getPositiveSamples(), samples.getNegativeSamples(), algebra);
+        SFA<CharPred,Character> res = null;
+        try {
+            if (cmdline.hasOption("strategy")) {
+                switch (cmdline.getOptionValue("strategy")) {
+                    case "edsm" -> {
+                        res = EDSM.run(samples.getPositiveSamples(), samples.getNegativeSamples(), algebra);
+                    }
+                    case "rpni" -> {
+                        res = RPNI.run(samples.getPositiveSamples(), samples.getNegativeSamples(), algebra);
+                    }
+                    case "rpniind" -> {
+                        res = LearningWithIndEx.RPNIInductiveFixedPoint(samples, algebra);
+                    }
+                    case "edsmind" -> {
+                        res = LearningWithIndEx.EDSMInductiveFixedPoint(samples, algebra);
+                    }
+                    default -> {
+                        res = EDSM.run(samples.getPositiveSamples(), samples.getNegativeSamples(), algebra);
+                    }
                 }
-                case "rpni" -> {
-                    res = RPNI.run(samples.getPositiveSamples(), samples.getNegativeSamples(), algebra);
-                }
-                case "rpniind" -> {
-                    res = LearningWithIndEx.RPNIInductiveFixedPoint(samples, algebra);
-                }
-                case "edsmind" -> {
-                    res = LearningWithIndEx.EDSMInductiveFixedPoint(samples, algebra);
-                }
-                default -> {
-                    res = EDSM.run(samples.getPositiveSamples(), samples.getNegativeSamples(), algebra);
-                }
+            } else {
+                res = EDSM.run(samples.getPositiveSamples(), samples.getNegativeSamples(), algebra);
             }
-        } else {
-            res = EDSM.run(samples.getPositiveSamples(), samples.getNegativeSamples(), algebra);
+        } catch (DisjointSetViolation e) {
+            System.out.println(e.getMessage());
+            System.err.println(e.getMessage());
+            System.exit(5);
         }
 
         res = res.mkTotal(algebra);
