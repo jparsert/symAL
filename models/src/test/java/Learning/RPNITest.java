@@ -204,6 +204,29 @@ public class RPNITest {
         }
     }
 
+    private static <A,B> void assertIsSameAutomaton(SFA<A,B> a, SFA<A,B> b) {
+        // same states
+        assertEquals(a.getStates(), b.getStates());
+
+        //Same Transitions
+        for(var s : a.getStates()) {
+            Collection<Move<A, B>> trans = a.getMovesFrom(s);
+            for (var t : trans) {
+                assertTrue(b.getMovesFrom(s).contains(t));
+            }
+        }
+
+        for(var s : b.getStates()) {
+            Collection<Move<A, B>> trans = b.getMovesFrom(s);
+            for (var t : trans) {
+                assertTrue(a.getMovesFrom(s).contains(t));
+            }
+        }
+
+        assertEquals(a.getFinalStates(), b.getFinalStates());
+        assertEquals(a.getInitialState(), b.getInitialState());
+    }
+
     @Test
     public void DeterminismTest() throws IOException, InvalidConfigurationException, DeterminismViolationException, TimeoutException {
 
@@ -228,34 +251,35 @@ public class RPNITest {
 
                 SFA<CharTuplePred, Character[]> res2 = RPNI.run(samples2.getPositiveSamples(), samples2.getNegativeSamples(), algebra2);
 
-                // same states
-                assertEquals(res1.getStates(), res2.getStates());
-
-                res1.createDotFile("A", "/home/julian/");
-                res2.createDotFile("B", "/home/julian/");
-
-                //Same Transitions
-                for(var s : res1.getStates()) {
-                    Collection<Move<CharTuplePred, Character[]>> trans = res1.getMovesFrom(s);
-                    for (var t : trans) {
-                        assertTrue(res2.getMovesFrom(s).contains(t));
-                    }
-                }
-
-                for(var s : res2.getStates()) {
-                    Collection<Move<CharTuplePred, Character[]>> trans = res2.getMovesFrom(s);
-                    for (var t : trans) {
-                        assertTrue(res1.getMovesFrom(s).contains(t));
-                    }
-                }
-
-                assertEquals(res1.getFinalStates(), res2.getFinalStates());
-                assertEquals(res1.getInitialState(), res2.getInitialState());
+               assertIsSameAutomaton(res1, res2);
 
             }
         }
         assert(files > 0);
 
+
+        folder = new File("src/test/resources/IntervalProblems");
+        listOfFiles = folder.listFiles();
+        assert listOfFiles != null;
+
+        files = 0;
+
+        for (File file : listOfFiles) {
+            if (file.isFile() && file.getName().endsWith(".json")) {
+                files += 1;
+                LearningSamples<Character> samples =  LearningSamples.readSamplesFromJsonFile(file.getPath(), new StringToUnicodeWordParser());
+                BooleanAlgebra<CharPred, Character> algebra = new UnaryCharIntervalSolver();
+                SFA<CharPred, Character> res = RPNI.run(samples.getPositiveSamples(), samples.getNegativeSamples(), algebra);
+
+                LearningSamples<Character> samples1 =  LearningSamples.readSamplesFromJsonFile(file.getPath(), new StringToUnicodeWordParser());
+                BooleanAlgebra<CharPred, Character> algebra1 = new UnaryCharIntervalSolver();
+                SFA<CharPred, Character> res1 = RPNI.run(samples1.getPositiveSamples(), samples1.getNegativeSamples(), algebra1);
+
+                assertIsSameAutomaton(res, res1);
+
+            }
+        }
+        assert(files > 0);
     }
 
 
