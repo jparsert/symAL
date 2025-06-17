@@ -3,16 +3,19 @@ package Learning;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
+import automata.Move;
 import automata.sfa.SFA;
+import automata.sfa.SFAInputMove;
 import learning.sfa.RPNI;
 import org.junit.Test;
 import org.sat4j.specs.TimeoutException;
 
 import static java.lang.String.format;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import org.sosy_lab.common.configuration.InvalidConfigurationException;
 import org.sosy_lab.java_smt.api.BooleanFormula;
@@ -200,5 +203,61 @@ public class RPNITest {
             assertFalse(format("The following sample should NOT be accepted but is accepted: %s", e), res.accepts(e, algebra));
         }
     }
+
+    @Test
+    public void DeterminismTest() throws IOException, InvalidConfigurationException, DeterminismViolationException, TimeoutException {
+
+        File folder = new File("src/test/resources/CharIntervalTuples");
+        File[] listOfFiles = folder.listFiles();
+        assert listOfFiles != null;
+
+        int files = 0;
+
+        for (File file : listOfFiles) {
+            if (file.isFile() && file.getName().endsWith(".json")) {
+                files += 1;
+                LearningSamples<Character[]> samples =  LearningSamples.readSamplesFromJsonFile(file.getPath(), new CharIntervalTupleParser());
+                assertTrue(samples.getDimension().isPresent());
+                BooleanAlgebra<CharTuplePred, Character[]> algebra = new CharIntervalTupleSolver(samples.getDimension().get());
+
+                SFA<CharTuplePred, Character[]> res1 = RPNI.run(samples.getPositiveSamples(), samples.getNegativeSamples(), algebra);
+
+                LearningSamples<Character[]> samples2 =  LearningSamples.readSamplesFromJsonFile(file.getPath(), new CharIntervalTupleParser());
+                assertTrue(samples2.getDimension().isPresent());
+                BooleanAlgebra<CharTuplePred, Character[]> algebra2 = new CharIntervalTupleSolver(samples2.getDimension().get());
+
+                SFA<CharTuplePred, Character[]> res2 = RPNI.run(samples2.getPositiveSamples(), samples2.getNegativeSamples(), algebra2);
+
+                // same states
+                assertEquals(res1.getStates(), res2.getStates());
+
+                res1.createDotFile("A", "/home/julian/");
+                res2.createDotFile("B", "/home/julian/");
+
+                //Same Transitions
+                for(var s : res1.getStates()) {
+                    Collection<Move<CharTuplePred, Character[]>> trans = res1.getMovesFrom(s);
+                    for (var t : trans) {
+                        assertTrue(res2.getMovesFrom(s).contains(t));
+                    }
+                }
+
+                for(var s : res2.getStates()) {
+                    Collection<Move<CharTuplePred, Character[]>> trans = res2.getMovesFrom(s);
+                    for (var t : trans) {
+                        assertTrue(res1.getMovesFrom(s).contains(t));
+                    }
+                }
+
+                assertEquals(res1.getFinalStates(), res2.getFinalStates());
+                assertEquals(res1.getInitialState(), res2.getInitialState());
+
+            }
+        }
+        assert(files > 0);
+
+    }
+
+
 
 }
