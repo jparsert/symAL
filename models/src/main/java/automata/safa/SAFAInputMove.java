@@ -66,7 +66,7 @@ public class SAFAInputMove<P,S> {
 	public boolean equals(Object other) {
 		if (other instanceof SAFAInputMove<?, ?>) {
 			SAFAInputMove<?, ?> otherCasted = (SAFAInputMove<?, ?>) other;
-			return otherCasted.from==from && otherCasted.to.equals(to) && otherCasted.guard==guard;
+			return Objects.equals(otherCasted.from, from) && otherCasted.to.equals(to) && Objects.equals(otherCasted.guard,guard);
 		}
 
 		return false;

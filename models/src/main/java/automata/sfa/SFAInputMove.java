@@ -59,8 +59,9 @@ public class SFAInputMove<P,S> extends SFAMove<P, S>{
 
 	@Override
 	public boolean equals(Object other) {
-		if (other instanceof SFAInputMove<?, ?> otherCasted) {
-            return Objects.equals(otherCasted.from, from) && Objects.equals(otherCasted.to, to) && Objects.equals(otherCasted.guard, guard);
+		if (other instanceof SFAInputMove<?, ?>) {
+			SFAInputMove<?, ?> otherCasted = (SFAInputMove<?, ?>) other;
+			return Objects.equals(otherCasted.from, from) && Objects.equals(otherCasted.to, to) && Objects.equals(otherCasted.guard,guard);
 		}
 
 		return false;
