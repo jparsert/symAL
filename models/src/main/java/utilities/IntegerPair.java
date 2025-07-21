@@ -3,6 +3,8 @@
  */
 package utilities;
 
+import java.util.Objects;
+
 public class IntegerPair extends Pair<Integer,Integer> {
 	
 	private static final long serialVersionUID = -4974702686583519556L;
@@ -55,7 +57,7 @@ public class IntegerPair extends Pair<Integer,Integer> {
 		if (!(o instanceof Pair<?,?>))
 			return false;		
 		IntegerPair s = (IntegerPair) o;
-		return s.first==first && s.second==second;
+		return Objects.equals(s.first, first) && Objects.equals(s.second, second);
 	}
 	
 	public String toString(){

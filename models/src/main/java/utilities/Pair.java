@@ -1,6 +1,7 @@
 package utilities;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 
 public class Pair<A, B> implements Serializable{
@@ -31,10 +32,10 @@ public class Pair<A, B> implements Serializable{
     	if (other instanceof Pair) {
     		Pair<?, ?> otherPair = (Pair<?, ?>) other;
     		return 
-    		((  this.first == otherPair.first ||
+    		((  Objects.equals(this.first, otherPair.first) ||
     			( this.first != null && otherPair.first != null &&
     			  this.first.equals(otherPair.first))) &&
-    		 (	this.second == otherPair.second ||
+    		 (	Objects.equals(this.second, otherPair.second) ||
     			( this.second != null && otherPair.second != null &&
     			  this.second.equals(otherPair.second))) );
     	}
