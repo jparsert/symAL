@@ -25,9 +25,12 @@ import theory.LRATuples.RationalTupleCompAlgebra;
 import theory.characters.CharPred;
 import theory.characters.CharTuplePred;
 import theory.intervals.CharIntervalTupleSolver;
+import theory.intervals.RealPred;
+import theory.intervals.RealSolver;
 import theory.intervals.UnaryCharIntervalSolver;
 import utilities.exceptions.DeterminismViolationException;
 import utilities.parsing.CharIntervalTupleParser;
+import utilities.parsing.DoubleWordParser;
 import utilities.parsing.LRATupleParser;
 import utilities.LearningSamples;
 import utilities.parsing.StringToUnicodeWordParser;
@@ -125,6 +128,41 @@ public class RPNITest {
         }
         assert(files > 0);
     }
+
+
+
+    @Test
+    public void RPNIRealIntervals() throws IOException, InvalidConfigurationException, DeterminismViolationException, TimeoutException {
+        File folder = new File("src/test/resources/RealIntervalProblems");
+        File[] listOfFiles = folder.listFiles();
+        assert listOfFiles != null;
+
+        int files = 0;
+
+        for (File file : listOfFiles) {
+            if (file.isFile() && file.getName().endsWith(".json")) {
+                files += 1;
+                LearningSamples<Double> samples =  LearningSamples.readSamplesFromJsonFile(file.getPath(), new DoubleWordParser());
+
+                BooleanAlgebra<RealPred, Double> algebra = new RealSolver();
+
+                SFA<RealPred, Double> res = RPNI.run(samples.getPositiveSamples(), samples.getNegativeSamples(), algebra);
+
+                for (List<Double> e : samples.getPositiveSamples()) {
+                    assertTrue(format("The following sample should be accepted but is rejected: %s", e), res.accepts(e, algebra));
+                }
+
+                for (List<Double> e : samples.getNegativeSamples()) {
+                    assertFalse(format("The following sample should NOT be accepted but is accepted: %s", e), res.accepts(e, algebra));
+                }
+                res = res.mkTotal(algebra);
+                res.createDotFile("ASD", "/home/julian/");
+
+            }
+        }
+        assert(files > 0);
+    }
+
 
     @Test
     public void printingAfterRPNI() throws IOException, DeterminismViolationException, TimeoutException {

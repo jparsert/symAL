@@ -11,6 +11,8 @@ import theory.LRATuples.RationalTupleCompAlgebra;
 import theory.characters.CharPred;
 import theory.characters.CharTuplePred;
 import theory.intervals.CharIntervalTupleSolver;
+import theory.intervals.RealPred;
+import theory.intervals.RealSolver;
 import theory.intervals.UnaryCharIntervalSolver;
 import utilities.*;
 
@@ -24,9 +26,7 @@ import java.nio.file.Paths;
 import org.apache.commons.cli.*;
 import utilities.exceptions.DeterminismViolationException;
 import utilities.exceptions.DisjointSetViolation;
-import utilities.parsing.CharIntervalTupleParser;
-import utilities.parsing.LRATupleParser;
-import utilities.parsing.StringToUnicodeWordParser;
+import utilities.parsing.*;
 
 public class Main {
 
@@ -145,6 +145,48 @@ public class Main {
     }
 
 
+    private static void realSolver(CommandLine commandLine) throws IOException, TimeoutException {
+        String jsonInputFile = getJSONInputFile(commandLine);
+        LearningSamples<Double> samples =  LearningSamples.readSamplesFromJsonFile(jsonInputFile, new DoubleWordParser());
+
+        BooleanAlgebra<RealPred, Double> algebra = new RealSolver();
+
+        SFA<RealPred,Double> res = null;
+        try {
+            if (commandLine.hasOption("strategy")) {
+                switch (commandLine.getOptionValue("strategy")) {
+                    case "edsm" -> {
+                        res = EDSM.run(samples.getPositiveSamples(), samples.getNegativeSamples(), algebra);
+                    }
+                    case "rpni" -> {
+                        res = RPNI.run(samples.getPositiveSamples(), samples.getNegativeSamples(), algebra);
+                    }
+                    case "rpniind" -> {
+                        res = LearningWithIndEx.RPNIInductiveFixedPoint(samples, algebra);
+                    }
+                    case "edsmind" -> {
+                        res = LearningWithIndEx.EDSMInductiveFixedPoint(samples, algebra);
+                    }
+                    default -> {
+                        res = EDSM.run(samples.getPositiveSamples(), samples.getNegativeSamples(), algebra);
+                    }
+                }
+            } else {
+                res = EDSM.run(samples.getPositiveSamples(), samples.getNegativeSamples(), algebra);
+            }
+        } catch (DisjointSetViolation | DeterminismViolationException | TimeoutException e) {
+            System.out.println(e.getMessage());
+            System.err.println(e.getMessage());
+            System.exit(5);
+        }
+
+        res = res.mkTotal(algebra);
+
+        printResultAutomaton(res, commandLine);
+
+    }
+
+
     public static void main(String[] args) throws TimeoutException, InvalidConfigurationException, IOException, DeterminismViolationException {
 
         Option theory = Option.builder("thy")
@@ -195,6 +237,7 @@ public class Main {
             case "RatTupComp" -> ratTupleComparisonAlgebra(commandLine);
             case "CharComparison" -> integerComparisonAlgebra(commandLine);
             case "CharIntervalTupleSolver" -> charIntervalTupleSolver(commandLine);
+            case "RealInterval" -> realSolver(commandLine);
         }
 
     }
